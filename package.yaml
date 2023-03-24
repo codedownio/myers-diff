@@ -35,7 +35,10 @@ flags:
     description: Use the diff implementation from the "Diff" package
 
 when:
+- condition: flag(uni_myers)
+  cpp-options: -DUNI_MYERS
 - condition: flag(diff_myers)
+  cpp-options: -DDIFF_MYERS
   dependencies:
   - Diff
 
@@ -85,6 +88,9 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - myers-diff
+    - sandwich
+    - sandwich-quickcheck
+    - QuickCheck
 
 benchmarks:
   myers-diff-benchmarks:

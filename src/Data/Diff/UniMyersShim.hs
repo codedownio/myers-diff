@@ -1,20 +1,12 @@
 
-module Data.Diff.UniMyersShim where
+module Data.Diff.UniMyersShim (
+  utilDiff
+  ) where
 
 import Data.Function
-import Data.Int (Int)
-import Data.List (foldl', take, zip, length)
 import qualified Data.List as L
-import Data.Maybe (fromJust)
-import Data.Monoid (Monoid, mappend)
-import Data.Semigroup ((<>))
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import Data.Word (Word)
 import Language.LSP.Types
-import Prelude
-import System.IO (IO)
-import System.IO.Unsafe (unsafePerformIO)
 
 import qualified Data.Diff.UniMyers as UM
 
@@ -53,10 +45,7 @@ utilDiffToLspDiff elems = go [] 0 0 elems
                            & last
                            & T.length
 
-    countNewlines = foldl' (\sum c -> if c == '\n' then sum + 1 else sum) 0
-
-s1 = "abc"
-s2 = "ab"
+    countNewlines = L.foldl' (\total c -> if c == '\n' then total + 1 else total) 0
 
 utilDiff :: String -> String -> [TextDocumentContentChangeEvent]
 utilDiff s1 s2 = utilDiffToLspDiff (UM.diff s1 s2)

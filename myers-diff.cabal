@@ -61,7 +61,10 @@ library
     , text
     , vector
   default-language: Haskell2010
+  if flag(uni_myers)
+    cpp-options: -DUNI_MYERS
   if flag(diff_myers)
+    cpp-options: -DDIFF_MYERS
     build-depends:
         Diff
   if flag(uni_myers)
@@ -76,6 +79,7 @@ test-suite myers-diff-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Spec.UniMyersSpec
       Paths_myers_diff
   hs-source-dirs:
       test
@@ -96,13 +100,19 @@ test-suite myers-diff-test
       MultiParamTypeClasses
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , lsp-types
     , myers-diff
+    , sandwich
+    , sandwich-quickcheck
     , text
     , vector
   default-language: Haskell2010
+  if flag(uni_myers)
+    cpp-options: -DUNI_MYERS
   if flag(diff_myers)
+    cpp-options: -DDIFF_MYERS
     build-depends:
         Diff
 
@@ -140,6 +150,9 @@ benchmark myers-diff-benchmarks
     , text
     , vector
   default-language: Haskell2010
+  if flag(uni_myers)
+    cpp-options: -DUNI_MYERS
   if flag(diff_myers)
+    cpp-options: -DDIFF_MYERS
     build-depends:
         Diff
