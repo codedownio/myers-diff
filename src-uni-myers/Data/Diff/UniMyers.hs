@@ -23,7 +23,7 @@
 -- and
 --
 --    mapPartial f2 (diff l1 l2) == l2
-module Implementations.Util.Myers (
+module Data.Diff.UniMyers (
    diff,
    diff2,
    DiffElement(..),

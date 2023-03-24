@@ -24,6 +24,22 @@ dependencies:
 - text
 - vector
 
+flags:
+  uni_myers:
+    manual: true
+    default: true
+    description: Use the diff implementation from the "uni-util" package
+  diff_myers:
+    manual: true
+    default: true
+    description: Use the diff implementation from the "Diff" package
+
+when:
+- condition: flag(diff_myers)
+  dependencies:
+  - Diff
+
+
 default-extensions:
 - OverloadedStrings
 - QuasiQuotes
@@ -53,17 +69,11 @@ ghc-options:
 
 library:
   source-dirs: src
-
-executables:
-  myers-diff-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+  when:
+  - condition: flag(uni_myers)
+    source-dirs: src-uni-myers
     dependencies:
-    - myers-diff
+    - array
 
 tests:
   myers-diff-test:
@@ -86,7 +96,6 @@ benchmarks:
     - -with-rtsopts=-N
     dependencies:
     - array
-    - Diff
     - myers-diff
     - random
     - tasty
