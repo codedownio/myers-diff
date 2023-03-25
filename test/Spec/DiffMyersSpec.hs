@@ -24,8 +24,8 @@ spec = describe "diff_myers" $ do
       diffDiff "abc" "ab" `shouldBe` ([TextDocumentContentChangeEvent (Just (Range (Position 0 2) (Position 0 3))) Nothing ""])
 
   describe "QuickCheck" $ introduceQuickCheck $ modifyMaxSuccess (const 10000) $ do
-    prop "Single change" $ (\(InsertOrDelete (from, to)) -> verifyDiff from to)
-    -- prop "Multiple changes" $ (\(InsertOrDelete (from, to)) -> verifyDiff from to)
+    prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to
+    prop "Multiple changes" $ \(MultiInsertOrDelete (from, to)) -> verifyDiff from to
 
 
 verifyDiff :: Text -> Text -> Bool

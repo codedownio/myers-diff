@@ -24,7 +24,8 @@ spec = describe "uni_myers" $ do
       utilDiff "abc" "ab" `shouldBe` ([TextDocumentContentChangeEvent (Just (Range (Position 0 2) (Position 0 3))) Nothing ""])
 
   introduceQuickCheck $ modifyMaxSuccess (const 1000) $ do
-    prop "Arbitrary single change" $ (\(InsertOrDelete (from, to)) -> verifyDiff from to)
+    prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to
+    prop "Multiple changes" $ \(MultiInsertOrDelete (from, to)) -> verifyDiff from to
 
 
 verifyDiff :: Text -> Text -> Bool
