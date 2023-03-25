@@ -80,6 +80,8 @@ test-suite myers-diff-test
   main-is: Spec.hs
   other-modules:
       Spec.UniMyersSpec
+      TestLib.Apply
+      TestLib.Generators
       Paths_myers_diff
   hs-source-dirs:
       test
@@ -104,9 +106,11 @@ test-suite myers-diff-test
     , base >=4.7 && <5
     , lsp-types
     , myers-diff
+    , quickcheck-instances
     , sandwich
     , sandwich-quickcheck
     , text
+    , text-rope
     , vector
   default-language: Haskell2010
   if flag(uni_myers)

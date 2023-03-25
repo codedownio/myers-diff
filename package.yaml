@@ -90,7 +90,9 @@ tests:
     - myers-diff
     - sandwich
     - sandwich-quickcheck
+    - text-rope
     - QuickCheck
+    - quickcheck-instances
 
 benchmarks:
   myers-diff-benchmarks:
