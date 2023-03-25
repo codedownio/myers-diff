@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  cabal:
+    name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        ghc:
+        - "8.10.7"
+        - "9.0.2"
+        - "9.2.7"
+        - "9.4.4"
+        exclude:
+        # ghc-9.4.4.exe: C:\sr\ghc-9.4.4\hashable-1.4.2.0-caea75de59bac447a2475c023cb3e922a3a24348\lib\libHShashable-1.4.2.0-caea75de59bac447a2475c023cb3e922a3a24348.a(#7:LowLevel.o): Not a x86_64 PE+ file.
+        # ghc-9.4.4.exe: Unknown COFF 4 type in getHeaderInfo.
+        - os: windows-latest
+          ghc: 9.4.4
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: haskell/actions/setup@v1
+      id: setup-haskell-cabal
+      name: Setup Haskell
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: "latest"
+
+    - name: Freeze
+      run: |
+        cabal freeze
+
+    - uses: actions/cache@v1
+      name: Cache ~/.cabal/store
+      with:
+        path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+
+    - name: Build
+      run: |
+        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+        cabal build all
+
+    - name: Test
+      run: |
+        cabal test all
+
+  stack:
+    name: stack / ghc ${{ matrix.ghc }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ghc:
+        - "8.10.7"
+        - "9.0.2"
+        - "9.2.7"
+        - "9.4.4"
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: haskell/actions/setup@v2
+      name: Setup Haskell Stack
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        stack-version: "latest"
+        enable-stack: true
+
+    - uses: actions/cache@v1
+      name: Cache ~/.stack
+      with:
+        path: ~/.stack
+        key: ${{ runner.os }}-${{ matrix.ghc }}-stack
+
+    - name: Build
+      run: |
+        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+
+    - name: Test
+      run: |
+        stack test --system-ghc
