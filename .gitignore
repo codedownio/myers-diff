@@ -1,3 +1,5 @@
 .stack-work/
 *~
 test_runs
+cabal.project.local
+dist-newstyle/
