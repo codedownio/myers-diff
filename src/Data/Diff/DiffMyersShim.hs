@@ -49,6 +49,3 @@ utilDiffToLspDiff elems = go [] 0 0 elems
 
 diffDiff :: String -> String -> [TextDocumentContentChangeEvent]
 diffDiff s1 s2 = utilDiffToLspDiff (DD.getGroupedDiff s1 s2)
-
-s1 = ""
-s2 = "I"

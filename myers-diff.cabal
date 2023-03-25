@@ -152,11 +152,11 @@ benchmark myers-diff-benchmarks
   build-depends:
       array
     , base >=4.7 && <5
+    , criterion
+    , deepseq
     , lsp-types
     , myers-diff
     , random
-    , tasty
-    , tasty-bench
     , text
     , vector
   default-language: Haskell2010
