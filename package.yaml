@@ -27,8 +27,8 @@ dependencies:
 flags:
   uni_myers:
     manual: true
-    default: true
-    description: Use the diff implementation from the "uni-util" package
+    default: false
+    description: Use the diff implementation from the "uni-util" package (buggy)
   diff_myers:
     manual: true
     default: true
@@ -75,6 +75,9 @@ library:
   when:
   - condition: flag(uni_myers)
     source-dirs: src-uni-myers
+    exposed-modules:
+    - Data.Diff.UniMyers
+    - Data.Diff.UniMyersShim
     dependencies:
     - array
 
@@ -93,6 +96,9 @@ tests:
     - text-rope
     - QuickCheck
     - quickcheck-instances
+    when:
+    - condition: flag(uni_myers)
+      source-dirs: test-uni-myers
 
 benchmarks:
   myers-diff-benchmarks:

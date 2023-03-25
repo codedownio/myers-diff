@@ -8,7 +8,13 @@ import Test.Sandwich
 import Spec.UniMyersSpec as UniMyersSpec
 #endif
 
+import Spec.DiffMyersSpec as DiffMyersSpec
+
 
 main :: IO ()
 main = runSandwichWithCommandLineArgs defaultOptions $ do
+#ifdef UNI_MYERS
   UniMyersSpec.spec
+#endif
+
+  DiffMyersSpec.spec

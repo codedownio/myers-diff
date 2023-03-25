@@ -27,13 +27,13 @@ flag diff_myers
   default: True
 
 flag uni_myers
-  description: Use the diff implementation from the "uni-util" package
+  description: Use the diff implementation from the "uni-util" package (buggy)
   manual: True
-  default: True
+  default: False
 
 library
   exposed-modules:
-      Data.Diff.UniMyersShim
+      Data.Diff.DiffMyersShim
       Lib
   other-modules:
       Paths_myers_diff
@@ -68,8 +68,9 @@ library
     build-depends:
         Diff
   if flag(uni_myers)
-    other-modules:
+    exposed-modules:
         Data.Diff.UniMyers
+        Data.Diff.UniMyersShim
     hs-source-dirs:
         src-uni-myers
     build-depends:
@@ -79,7 +80,7 @@ test-suite myers-diff-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Spec.UniMyersSpec
+      Spec.DiffMyersSpec
       TestLib.Apply
       TestLib.Generators
       Paths_myers_diff
@@ -119,6 +120,11 @@ test-suite myers-diff-test
     cpp-options: -DDIFF_MYERS
     build-depends:
         Diff
+  if flag(uni_myers)
+    other-modules:
+        Spec.UniMyersSpec
+    hs-source-dirs:
+        test-uni-myers
 
 benchmark myers-diff-benchmarks
   type: exitcode-stdio-1.0
