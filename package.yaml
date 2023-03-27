@@ -12,7 +12,9 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/myers-diff#readme>
 
 dependencies:
+- array
 - base >= 4.7 && < 5
+- loop
 - lsp-types
 - text
 - vector
