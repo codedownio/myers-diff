@@ -6,8 +6,10 @@ module Data.Diff.Myers (
   ) where
 
 import Control.Loop
-import Data.Array.IO
+import Control.Monad.Primitive
 import Data.Function
+import Data.Vector.Unboxed.Mutable as V
+import Prelude hiding (read)
 
 
 class AbstractVector a where
@@ -17,6 +19,11 @@ data Edit = EditDelete { deletePositionOld :: Int }
           | EditInsert { insertPositionOld :: Int
                        , insertPositionNew :: Int }
 
+-- TODO: switch from slice to unsafeSlice once things are good
+
+diff :: (
+  PrimMonad m, Unbox a, Eq a, AbstractVector (MVector (PrimState m) a)
+  ) => MVector (PrimState m) a -> MVector (PrimState m) a -> Int -> Int -> m [Edit]
 diff e f i j = do
   let bigN = abstractLen e
   let bigM = abstractLen f
@@ -25,42 +32,41 @@ diff e f i j = do
 
   if | bigN > 0 && bigM > 0 -> do
          let w = bigN - bigM
-         g :: IOUArray Int Int <- newArray (0, bigZ - 1) 0
-         p :: IOUArray Int Int <- newArray (0, bigZ - 1) 0
+         g <- new bigZ
+         p <- new bigZ
 
          numLoopState 0 ((bigL `div` 2) + (if (bigL `mod` 2) /= 0 then 1 else 0)) [] $ \_lastState h -> do
            numLoopState (0 :: Int) 1 [] $ \_lastState r -> do
              let (c, d, o, m) = if r == 0 then (g, p, 1, 1) else (p, g, 0, -1)
              forLoopState (negate (h - (2 * (max 0 (h - bigM))))) (<= (h - (2 * (max 0 (h - bigN))))) (+ 2) [] $ \_lastState k -> do
                a <- do
-                 prevC <- readArray c ((k-1) `mod` bigZ)
-                 nextC <- readArray c ((k+1) `mod` bigZ)
+                 prevC <- read c ((k-1) `mod` bigZ)
+                 nextC <- read c ((k+1) `mod` bigZ)
                  return (if (k==(-h) || k /= h && prevC < nextC) then nextC else prevC + 1) -- TODO: precedence of || and && matches python?
                let b = a - k
                let (s, t) = (a, b)
 
                (a, b) <- flip fix (a, b) $ \loop (a, b) -> do
-                 eVal <- readArray e ((1 - o) * bigN + m*a + (o - 1))
-                 fVal <- readArray f ((1 - o) * bigM + m*b + (o - 1))
+                 eVal <- read e ((1 - o) * bigN + m*a + (o - 1))
+                 fVal <- read f ((1 - o) * bigM + m*b + (o - 1))
                  if | a < bigN && b < bigM && eVal == fVal -> loop (a + 1, b + 1)
                     | otherwise -> pure (a, b)
 
-               writeArray c (k `mod` bigZ) a
+               write c (k `mod` bigZ) a
                let z = negate (k - w)
 
-               cVal <- readArray c (k `mod` bigZ)
-               dVal <- readArray d (z `mod` bigZ)
+               cVal <- read c (k `mod` bigZ)
+               dVal <- read d (z `mod` bigZ)
                if | (bigL `mod` 2 == o) && (z >= (negate (h-o))) && (z <= h - o) && (cVal + dVal >= bigN) -> do
                       let (bigD, x, y, u, v) = if o == 1 then (2 * (h-1), s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
-                      if | bigD > 1 || (x /= u && y /= v) ->
-                            -- diff (e[0:x], f[0:y], i, j) + diff (e[u:N], f[v:M], i+u, j+v)
-                            undefined
+                      if | bigD > 1 || (x /= u && y /= v) -> do
+                            ret1 <- diff (slice 0 x e) (slice 0 y f) i j
+                            ret2 <- diff (slice u (bigN - u) e) (slice v (bigM - v) f) (i+u) (j+v)
+                            return (ret1 <> ret2) -- TODO: switch from lists to Seq for faster (log-time) concat
                          | bigM > bigN ->
-                            -- diff([], f[bigN:bigM], i+bigN, j+bigN)
-                            undefined
+                            diff (slice 0 0 e) (slice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
                          | bigM < bigN ->
-                            -- diff(e[bigM:bigN], [], i+bigM, j+bigM)
-                            undefined
+                            diff (slice bigM (bigN - bigM) e) (slice 0 0 f) (i+bigM) (j+bigM)
                          | otherwise -> return []
                   | otherwise -> return []
 
