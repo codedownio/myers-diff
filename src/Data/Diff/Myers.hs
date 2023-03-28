@@ -82,7 +82,7 @@ diff' e f i j = do
                      a <- do
                        prevC <- read c ((k-1) `pyMod` bigZ)
                        nextC <- read c ((k+1) `pyMod` bigZ)
-                       return (if ((k == (-h) || k /= h) && (prevC < nextC)) then nextC else prevC + 1)
+                       return (if (k == (-h) || (k /= h && (prevC < nextC))) then nextC else prevC + 1)
                      let b = a - k
                      let (s, t) = (a, b)
 
