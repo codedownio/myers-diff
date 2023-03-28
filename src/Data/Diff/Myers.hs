@@ -15,6 +15,10 @@ import Data.Vector.Unboxed as VU
 import Data.Vector.Unboxed.Mutable as V
 import Prelude hiding (read)
 
+-- import Data.String.Interpolate hiding (i)
+-- import Debug.Trace
+-- import GHC.Stack
+
 
 data Edit = EditDelete { deletePositionOld :: Int }
           | EditInsert { insertPositionOld :: Int
@@ -42,12 +46,12 @@ diffStrings left right = do
 -- * Core
 
 diff :: (
-  PrimMonad m, Unbox a, Eq a
+  PrimMonad m, Unbox a, Eq a, Show a
   ) => MVector (PrimState m) a -> MVector (PrimState m) a -> m [Edit]
 diff e f = diff' e f 0 0
 
 diff' :: (
-  PrimMonad m, Unbox a, Eq a
+  PrimMonad m, Unbox a, Eq a, Show a
   ) => MVector (PrimState m) a -> MVector (PrimState m) a -> Int -> Int -> m [Edit]
 diff' e f i j = do
   let bigN = V.length e
@@ -81,9 +85,11 @@ diff' e f i j = do
                      let (s, t) = (a, b)
 
                      (a, b) <- flip fix (a, b) $ \loop (a', b') -> do
-                       eVal <- read e (((1 - o) * bigN) + (m*a') + (o - 1))
-                       fVal <- read f (((1 - o) * bigM) + (m*b') + (o - 1))
-                       if | a' < bigN && b' < bigM && eVal == fVal -> loop (a' + 1, b' + 1)
+                       if | a' < bigN && b' < bigM -> do
+                              eVal <- read e (((1 - o) * bigN) + (m*a') + (o - 1))
+                              fVal <- read f (((1 - o) * bigM) + (m*b') + (o - 1))
+                              if | eVal == fVal -> loop (a' + 1, b' + 1)
+                                 | otherwise -> pure (a', b')
                           | otherwise -> pure (a', b')
 
                      write c (k `pyMod` bigZ) a
@@ -94,13 +100,23 @@ diff' e f i j = do
                      if | (bigL `pyMod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
                             let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
                             if | bigD > 1 || (x /= u && y /= v) -> do
-                                  ret1 <- diff' (V.slice 0 x e) (V.slice 0 y f) i j
-                                  ret2 <- diff' (V.slice u (bigN - u) e) (V.slice v (bigM - v) f) (i+u) (j+v)
+                                  slice11 <- copyingSlice 0 x e
+                                  slice12 <- copyingSlice 0 y f
+                                  ret1 <- diff' slice11 slice12 i j
+
+                                  slice21 <- copyingSlice u (bigN - u) e
+                                  slice22 <- copyingSlice v (bigM - v) f
+                                  ret2 <- diff' slice21 slice22 (i+u) (j+v)
+
                                   return (ret1 <> ret2) -- TODO: switch from lists to Seq for faster (log-time) concat
-                               | bigM > bigN ->
-                                  diff' (V.slice 0 0 e) (V.slice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
-                               | bigM < bigN ->
-                                  diff' (V.slice bigM (bigN - bigM) e) (V.slice 0 0 f) (i+bigM) (j+bigM)
+                               | bigM > bigN -> do
+                                  slice1 <- copyingSlice 0 0 e
+                                  slice2 <- copyingSlice bigN (bigM - bigN) f
+                                  diff' slice1 slice2 (i+bigN) (j+bigN)
+                               | bigM < bigN -> do
+                                  slice1 <- copyingSlice bigM (bigN - bigM) e
+                                  slice2 <- copyingSlice 0 0 f
+                                  diff' slice1 slice2 (i+bigM) (j+bigM)
                                | otherwise -> return []
                         | otherwise -> loopK
 
@@ -109,6 +125,12 @@ diff' e f i j = do
          return [EditDelete (i + n) | n <- [0..(bigN - 1)]]
      | otherwise -> do
          return [EditInsert i (j + n) | n <- [0..(bigM - 1)]]
+
+copyingSlice :: (PrimMonad m, Unbox a) => Int -> Int -> MVector (PrimState m) a -> m (MVector (PrimState m) a)
+copyingSlice start len input = do
+  output <- new len
+  V.copy output (V.slice start len input)
+  return output
 
 pyMod :: Integral a => a -> a -> a
 pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
@@ -145,3 +167,10 @@ pyDiv x y = if (x < 0) `xor` (y < 0) then -((-x) `div` y) else x `div` y
 --         return [{"operation": "delete", "position_old": i+n} for n in range(0,N)]
 --     else:
 --         return [{"operation": "insert", "position_old": i,"position_new":j+n} for n in range(0,M)]
+
+-- * Testing
+
+-- printVector :: (Unbox a, PrimMonad m, Show a) => Text -> MVector (PrimState m) a -> m ()
+-- printVector name v = do
+--   frozen <- VU.freeze v
+--   traceM [iii|#{name}: #{frozen}|]
