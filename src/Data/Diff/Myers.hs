@@ -8,6 +8,7 @@ module Data.Diff.Myers (
   ) where
 
 import Control.Monad.Primitive
+import Data.Bits (xor)
 import Data.Function
 import Data.Text as T
 import Data.Vector.Unboxed as VU
@@ -18,6 +19,7 @@ import Prelude hiding (read)
 data Edit = EditDelete { deletePositionOld :: Int }
           | EditInsert { insertPositionOld :: Int
                        , insertPositionNew :: Int }
+  deriving (Show, Eq)
 
 -- TODO: switch from slice to unsafeSlice once things are good
 
@@ -59,7 +61,7 @@ diff' e f i j = do
          p <- new bigZ
 
          flip fix 0 $ \loopBaseH -> \case
-           h | not (h <= ((bigL `div` 2) + (if (bigL `mod` 2) /= 0 then 1 else 0))) -> return []
+           h | not (h <= ((bigL `pyDiv` 2) + (if (bigL `pyMod` 2) /= 0 then 1 else 0))) -> return []
            h -> do
              let loopH = loopBaseH (h + 1)
              flip fix (0 :: Int) $ \loopBaseR -> \case
@@ -72,25 +74,25 @@ diff' e f i j = do
                    k -> do
                      let loopK = loopBaseK (k + 2)
                      a <- do
-                       prevC <- read c ((k-1) `mod` bigZ)
-                       nextC <- read c ((k+1) `mod` bigZ)
-                       return (if (k==(-h) || k /= h && prevC < nextC) then nextC else prevC + 1) -- TODO: precedence of || and && matches python?
+                       prevC <- read c ((k-1) `pyMod` bigZ)
+                       nextC <- read c ((k+1) `pyMod` bigZ)
+                       return (if ((k == (-h) || k /= h) && (prevC < nextC)) then nextC else prevC + 1)
                      let b = a - k
                      let (s, t) = (a, b)
 
-                     (a, b) <- flip fix (a, b) $ \loop (a, b) -> do
-                       eVal <- read e ((1 - o) * bigN + m*a + (o - 1))
-                       fVal <- read f ((1 - o) * bigM + m*b + (o - 1))
-                       if | a < bigN && b < bigM && eVal == fVal -> loop (a + 1, b + 1)
-                          | otherwise -> pure (a, b)
+                     (a, b) <- flip fix (a, b) $ \loop (a', b') -> do
+                       eVal <- read e (((1 - o) * bigN) + (m*a') + (o - 1))
+                       fVal <- read f (((1 - o) * bigM) + (m*b') + (o - 1))
+                       if | a' < bigN && b' < bigM && eVal == fVal -> loop (a' + 1, b' + 1)
+                          | otherwise -> pure (a', b')
 
-                     write c (k `mod` bigZ) a
+                     write c (k `pyMod` bigZ) a
                      let z = negate (k - w)
 
-                     cVal <- read c (k `mod` bigZ)
-                     dVal <- read d (z `mod` bigZ)
-                     if | (bigL `mod` 2 == o) && (z >= (negate (h-o))) && (z <= h - o) && (cVal + dVal >= bigN) -> do
-                            let (bigD, x, y, u, v) = if o == 1 then (2 * (h-1), s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
+                     cVal <- read c (k `pyMod` bigZ)
+                     dVal <- read d (z `pyMod` bigZ)
+                     if | (bigL `pyMod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
+                            let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
                             if | bigD > 1 || (x /= u && y /= v) -> do
                                   ret1 <- diff' (V.slice 0 x e) (V.slice 0 y f) i j
                                   ret2 <- diff' (V.slice u (bigN - u) e) (V.slice v (bigM - v) f) (i+u) (j+v)
@@ -107,6 +109,12 @@ diff' e f i j = do
          return [EditDelete (i + n) | n <- [0..(bigN - 1)]]
      | otherwise -> do
          return [EditInsert i (j + n) | n <- [0..(bigM - 1)]]
+
+pyMod :: Integral a => a -> a -> a
+pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
+
+pyDiv :: Integral a => a -> a -> a
+pyDiv x y = if (x < 0) `xor` (y < 0) then -((-x) `div` y) else x `div` y
 
 -- def diff(e, f, i=0, j=0):
 --     #  Documented at http://blog.robertelder.org/diff-algorithm/
