@@ -100,22 +100,22 @@ diff' e f i j = do
                      if | (bigL `pyMod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
                             let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
                             if | bigD > 1 || (x /= u && y /= v) -> do
-                                  slice11 <- copyingSlice 0 x e
-                                  slice12 <- copyingSlice 0 y f
+                                  slice11 <- doSlice 0 x e
+                                  slice12 <- doSlice 0 y f
                                   ret1 <- diff' slice11 slice12 i j
 
-                                  slice21 <- copyingSlice u (bigN - u) e
-                                  slice22 <- copyingSlice v (bigM - v) f
+                                  slice21 <- doSlice u (bigN - u) e
+                                  slice22 <- doSlice v (bigM - v) f
                                   ret2 <- diff' slice21 slice22 (i+u) (j+v)
 
                                   return (ret1 <> ret2) -- TODO: switch from lists to Seq for faster (log-time) concat
                                | bigM > bigN -> do
-                                  slice1 <- copyingSlice 0 0 e
-                                  slice2 <- copyingSlice bigN (bigM - bigN) f
+                                  slice1 <- doSlice 0 0 e
+                                  slice2 <- doSlice bigN (bigM - bigN) f
                                   diff' slice1 slice2 (i+bigN) (j+bigN)
                                | bigM < bigN -> do
-                                  slice1 <- copyingSlice bigM (bigN - bigM) e
-                                  slice2 <- copyingSlice 0 0 f
+                                  slice1 <- doSlice bigM (bigN - bigM) e
+                                  slice2 <- doSlice 0 0 f
                                   diff' slice1 slice2 (i+bigM) (j+bigM)
                                | otherwise -> return []
                         | otherwise -> loopK
@@ -126,11 +126,12 @@ diff' e f i j = do
      | otherwise -> do
          return [EditInsert i (j + n) | n <- [0..(bigM - 1)]]
 
-copyingSlice :: (PrimMonad m, Unbox a) => Int -> Int -> MVector (PrimState m) a -> m (MVector (PrimState m) a)
-copyingSlice start len input = do
-  output <- new len
-  V.copy output (V.slice start len input)
-  return output
+doSlice :: (PrimMonad m, Unbox a) => Int -> Int -> MVector (PrimState m) a -> m (MVector (PrimState m) a)
+-- doSlice start len input = do
+--   output <- new len
+--   V.copy output (V.slice start len input)
+--   return output
+doSlice start len input = return $ V.slice start len input
 
 pyMod :: Integral a => a -> a -> a
 pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
