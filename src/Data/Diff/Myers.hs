@@ -1,19 +1,19 @@
 {-# OPTIONS_GHC -fno-warn-partial-fields #-}
 
 module Data.Diff.Myers (
-  diff
+  diffTexts
+  , diffStrings
+  , diff
   , Edit(..)
   ) where
 
-import Control.Loop
 import Control.Monad.Primitive
 import Data.Function
+import Data.Text as T
+import Data.Vector.Unboxed as VU
 import Data.Vector.Unboxed.Mutable as V
 import Prelude hiding (read)
 
-
-class AbstractVector a where
-  abstractLen :: a -> Int
 
 data Edit = EditDelete { deletePositionOld :: Int }
           | EditInsert { insertPositionOld :: Int
@@ -21,12 +21,35 @@ data Edit = EditDelete { deletePositionOld :: Int }
 
 -- TODO: switch from slice to unsafeSlice once things are good
 
+diffTexts :: Text -> Text -> IO [Edit]
+diffTexts left right = do
+  -- This is faster than V.fromList (T.unpack left), right?
+  leftThawed <- V.generate (T.length left) (\i -> T.index left i)
+  rightThawed <- V.generate (T.length right) (\i -> T.index right i)
+
+  diff leftThawed rightThawed
+
+-- | To use in benchmarking against other libraries that use String
+diffStrings :: String -> String -> IO [Edit]
+diffStrings left right = do
+  leftThawed <- VU.thaw $ VU.fromList left
+  rightThawed <- VU.thaw $ VU.fromList right
+
+  diff leftThawed rightThawed
+
+-- * Core
+
 diff :: (
-  PrimMonad m, Unbox a, Eq a, AbstractVector (MVector (PrimState m) a)
+  PrimMonad m, Unbox a, Eq a
+  ) => MVector (PrimState m) a -> MVector (PrimState m) a -> m [Edit]
+diff e f = diff' e f 0 0
+
+diff' :: (
+  PrimMonad m, Unbox a, Eq a
   ) => MVector (PrimState m) a -> MVector (PrimState m) a -> Int -> Int -> m [Edit]
-diff e f i j = do
-  let bigN = abstractLen e
-  let bigM = abstractLen f
+diff' e f i j = do
+  let bigN = V.length e
+  let bigM = V.length f
   let bigL = bigN + bigM
   let bigZ = (2 * (min bigN bigM)) + 2
 
@@ -35,40 +58,49 @@ diff e f i j = do
          g <- new bigZ
          p <- new bigZ
 
-         numLoopState 0 ((bigL `div` 2) + (if (bigL `mod` 2) /= 0 then 1 else 0)) [] $ \_lastState h -> do
-           numLoopState (0 :: Int) 1 [] $ \_lastState r -> do
-             let (c, d, o, m) = if r == 0 then (g, p, 1, 1) else (p, g, 0, -1)
-             forLoopState (negate (h - (2 * (max 0 (h - bigM))))) (<= (h - (2 * (max 0 (h - bigN))))) (+ 2) [] $ \_lastState k -> do
-               a <- do
-                 prevC <- read c ((k-1) `mod` bigZ)
-                 nextC <- read c ((k+1) `mod` bigZ)
-                 return (if (k==(-h) || k /= h && prevC < nextC) then nextC else prevC + 1) -- TODO: precedence of || and && matches python?
-               let b = a - k
-               let (s, t) = (a, b)
+         flip fix 0 $ \loopBaseH -> \case
+           h | not (h <= ((bigL `div` 2) + (if (bigL `mod` 2) /= 0 then 1 else 0))) -> return []
+           h -> do
+             let loopH = loopBaseH (h + 1)
+             flip fix (0 :: Int) $ \loopBaseR -> \case
+               r | not (r <= 1) -> loopH
+               r -> do
+                 let loopR = loopBaseR (r + 1)
+                 let (c, d, o, m) = if r == 0 then (g, p, 1, 1) else (p, g, 0, -1)
+                 flip fix (negate (h - (2 * (max 0 (h - bigM))))) $ \loopBaseK -> \case
+                   k | not (k <= (h - (2 * (max 0 (h - bigN))))) -> loopR
+                   k -> do
+                     let loopK = loopBaseK (k + 2)
+                     a <- do
+                       prevC <- read c ((k-1) `mod` bigZ)
+                       nextC <- read c ((k+1) `mod` bigZ)
+                       return (if (k==(-h) || k /= h && prevC < nextC) then nextC else prevC + 1) -- TODO: precedence of || and && matches python?
+                     let b = a - k
+                     let (s, t) = (a, b)
 
-               (a, b) <- flip fix (a, b) $ \loop (a, b) -> do
-                 eVal <- read e ((1 - o) * bigN + m*a + (o - 1))
-                 fVal <- read f ((1 - o) * bigM + m*b + (o - 1))
-                 if | a < bigN && b < bigM && eVal == fVal -> loop (a + 1, b + 1)
-                    | otherwise -> pure (a, b)
+                     (a, b) <- flip fix (a, b) $ \loop (a, b) -> do
+                       eVal <- read e ((1 - o) * bigN + m*a + (o - 1))
+                       fVal <- read f ((1 - o) * bigM + m*b + (o - 1))
+                       if | a < bigN && b < bigM && eVal == fVal -> loop (a + 1, b + 1)
+                          | otherwise -> pure (a, b)
 
-               write c (k `mod` bigZ) a
-               let z = negate (k - w)
+                     write c (k `mod` bigZ) a
+                     let z = negate (k - w)
 
-               cVal <- read c (k `mod` bigZ)
-               dVal <- read d (z `mod` bigZ)
-               if | (bigL `mod` 2 == o) && (z >= (negate (h-o))) && (z <= h - o) && (cVal + dVal >= bigN) -> do
-                      let (bigD, x, y, u, v) = if o == 1 then (2 * (h-1), s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
-                      if | bigD > 1 || (x /= u && y /= v) -> do
-                            ret1 <- diff (slice 0 x e) (slice 0 y f) i j
-                            ret2 <- diff (slice u (bigN - u) e) (slice v (bigM - v) f) (i+u) (j+v)
-                            return (ret1 <> ret2) -- TODO: switch from lists to Seq for faster (log-time) concat
-                         | bigM > bigN ->
-                            diff (slice 0 0 e) (slice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
-                         | bigM < bigN ->
-                            diff (slice bigM (bigN - bigM) e) (slice 0 0 f) (i+bigM) (j+bigM)
-                         | otherwise -> return []
-                  | otherwise -> return []
+                     cVal <- read c (k `mod` bigZ)
+                     dVal <- read d (z `mod` bigZ)
+                     if | (bigL `mod` 2 == o) && (z >= (negate (h-o))) && (z <= h - o) && (cVal + dVal >= bigN) -> do
+                            let (bigD, x, y, u, v) = if o == 1 then (2 * (h-1), s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
+                            if | bigD > 1 || (x /= u && y /= v) -> do
+                                  ret1 <- diff' (V.slice 0 x e) (V.slice 0 y f) i j
+                                  ret2 <- diff' (V.slice u (bigN - u) e) (V.slice v (bigM - v) f) (i+u) (j+v)
+                                  return (ret1 <> ret2) -- TODO: switch from lists to Seq for faster (log-time) concat
+                               | bigM > bigN ->
+                                  diff' (V.slice 0 0 e) (V.slice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
+                               | bigM < bigN ->
+                                  diff' (V.slice bigM (bigN - bigM) e) (V.slice 0 0 f) (i+bigM) (j+bigM)
+                               | otherwise -> return []
+                        | otherwise -> loopK
 
 
      | bigN > 0 ->
