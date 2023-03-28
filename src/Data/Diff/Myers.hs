@@ -20,9 +20,11 @@ import Prelude hiding (read)
 -- import GHC.Stack
 
 
-data Edit = EditDelete { deletePositionOld :: Int }
-          | EditInsert { insertPositionOld :: Int
-                       , insertPositionNew :: Int }
+data Edit = EditDelete { deleteFrom :: Int
+                       , deleteTo :: Int }
+          | EditInsert { insertPos :: Int
+                       , insertFrom :: Int
+                       , insertTo :: Int }
   deriving (Show, Eq)
 
 -- TODO: switch from slice to unsafeSlice once things are good
@@ -121,10 +123,8 @@ diff' e f i j = do
                         | otherwise -> loopK
 
 
-     | bigN > 0 ->
-         return [EditDelete (i + n) | n <- [0..(bigN - 1)]]
-     | otherwise -> do
-         return [EditInsert i (j + n) | n <- [0..(bigM - 1)]]
+     | bigN > 0 -> return [EditDelete i (i + (bigN - 1))]
+     | otherwise -> return [EditInsert i j (j + (bigM - 1))]
 
 doSlice :: (PrimMonad m, Unbox a) => Int -> Int -> MVector (PrimState m) a -> m (MVector (PrimState m) a)
 -- doSlice start len input = do
