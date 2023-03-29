@@ -118,8 +118,12 @@ diff' e f i j = do
                         | otherwise -> loopK
 
 
-     | bigN > 0 -> return [EditDelete i (i + (bigN - 1))]
-     | otherwise -> return [EditInsert i j (j + (bigM - 1))]
+     | bigN > 0 -> if
+         | bigN - 1 >= i -> return [EditDelete i (i + (bigN - 1))]
+         | otherwise -> return []
+     | otherwise -> if
+         | bigM - 1 >= j -> return [EditInsert i j (j + (bigM - 1))]
+         | otherwise -> return []
 
 pyMod :: Integral a => a -> a -> a
 pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
