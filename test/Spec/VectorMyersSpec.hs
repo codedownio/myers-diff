@@ -38,18 +38,9 @@ spec = describe "VectorMyers" $ do
     checkDiff "" "ab" [mkInsert (0, 0) (0, 0) "ab"]
     checkDiff "x" "xab" [mkInsert (0, 1) (0, 1) "a", mkInsert (0, 2) (0, 2) "b"]
 
-
-
-  -- describe "Single-line cases" $ do
-  --   it "simple insertion" $ do
-  --     liftIO (diffTextsToChangeEvents "ab" "abc") >>= (`shouldBe` ([ChangeEvent (Range (Position 0 2) (Position 0 2)) "c"]))
-
-  --   it "simple deletion" $ do
-  --     liftIO (diffTextsToChangeEvents "abc" "ab") >>= (`shouldBe` ([ChangeEvent (Range (Position 0 2) (Position 0 3)) ""]))
-
-  -- describe "QuickCheck" $ introduceQuickCheck $ modifyMaxSuccess (const 10000) $ do
-  --   prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to
-  --   prop "Multiple changes" $ \(MultiInsertOrDelete (from, to)) -> verifyDiff from to
+  describe "QuickCheck" $ introduceQuickCheck $ modifyMaxSuccess (const 1000) $ do
+    prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to
+    prop "Multiple changes" $ \(MultiInsertOrDelete (from, to)) -> verifyDiff from to
 
 checkDiff from to changes = it (show from <> " -> " <> show to) $ do
   -- Check that the given changes actually work
@@ -62,7 +53,6 @@ checkDiff from to changes = it (show from <> " -> " <> show to) $ do
 mkDelete (l1, c1) (l2, c2) = ChangeEvent (Range (Position l1 c1) (Position l2 c2)) ""
 
 mkInsert (l1, c1) (l2, c2) t = ChangeEvent (Range (Position l1 c1) (Position l2 c2)) t
-
 
 verifyDiff from to = applyChangesText change from == to
   where change = diffTextsToChangeEvents from to
