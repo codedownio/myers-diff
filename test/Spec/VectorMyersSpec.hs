@@ -19,7 +19,6 @@ spec :: TopSpec
 spec = describe "VectorMyers" $ do
   describe "Single deletes" $ do
     checkDiff "a" "" [mkDelete (0, 0) (0, 1)]
-    checkDiff "ab" "" [mkDelete (0, 0) (0, 2)]
     checkDiff "ab" "a" [mkDelete (0, 1) (0, 2)]
     checkDiff "ab" "b" [mkDelete (0, 0) (0, 1)]
     checkDiff "\na" "\n" [mkDelete (1, 0) (1, 1)]
@@ -29,7 +28,9 @@ spec = describe "VectorMyers" $ do
     checkDiff "" "a" [mkInsert (0, 0) (0, 0) "a"]
     checkDiff "" "ab" [mkInsert (0, 0) (0, 0) "ab"]
 
-  -- describe "Double deletes" $ do
+  describe "Double deletes" $ do
+    checkDiff "ab" "" [mkDelete (0, 0) (0, 2)]
+    checkDiff "xab" "x" [mkDelete (0, 1) (0, 2), mkDelete (0, 1) (0, 2)]
   --   checkDiff "abc" "b" [mkDelete (0, 0) (0, 1), mkDelete (0, 1) (0, 2)]
 
 

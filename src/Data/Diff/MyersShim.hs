@@ -22,7 +22,7 @@ editScriptToChangeEvents left right = go mempty 0 0 0
 
     -- Implicit unchanged section before delete
     go seqSoFar pos line ch args@((EditDelete from to) :<| _) |
-      pos < from = go seqSoFar from line' ch' args
+      pos < from = trace [i|CONSUMED from #{pos} to #{from}.\nRecursing with #{from} (#{line'}, #{ch'}) #{args}\n|] $ go seqSoFar from line' ch' args
         where
           (numNewlinesEncountered, lastLineLength) = countNewlinesAndLastLineLength (VU.slice pos (from - pos) left)
           line' = line + numNewlinesEncountered
@@ -37,10 +37,10 @@ editScriptToChangeEvents left right = go mempty 0 0 0
           ch' | numNewlinesEncountered == 0 = ch + (from - pos)
               | otherwise = lastLineLength
 
-    go seqSoFar pos line ch ((EditDelete from to) :<| rest) = go (seqSoFar |> change) pos' line' ch' rest
+    go seqSoFar pos line ch ((EditDelete from to) :<| rest) = trace [i|DELETE #{change}.\nRecursing with #{pos'} (#{line'}, #{ch'}) #{rest}\n|] go (seqSoFar |> change) pos' line' ch' rest
       where
         change = ChangeEvent (Range (Position line ch) (Position line' ch')) ""
-        pos' = pos
+        pos' = to + 1
 
         deleted = VU.slice from (to + 1 - from) left
         (numNewlinesInDeleted, lastLineLengthInDeleted) = countNewlinesAndLastLineLength deleted
