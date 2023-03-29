@@ -3,6 +3,7 @@
 module TestLib.Generators where
 
 import Data.Function
+import Data.String.Interpolate
 import Data.Text as T
 import Test.QuickCheck as Q
 import Test.QuickCheck.Instances.Text ()
@@ -52,3 +53,45 @@ arbitraryDeleteOn initial = do
   let (_, z) = T.splitAt (pos2 - pos1) y
 
   return (x <> z)
+
+-- * Docs
+
+file1 :: Text
+file1 =
+  [__i|foo = 42
+       :t foo
+
+       homophones <- readFile "homophones.list"
+
+       putStrLn "HI"
+
+       abc
+
+       import Data.Aeson as A
+
+       -- | Here's a nice comment on bar
+       bar :: IO ()
+       bar = do
+         putStrLn "hello"
+         putStrLn "world"
+      |]
+
+file2 :: Text
+file2 =
+  [__i|foo = 42
+       :t foo
+
+       homophones <- readFile "homophones.list"
+
+       putStrLn "HI"
+
+       a
+
+       import Data.Aeson as A
+
+       -- | Here's a nice comment on bar
+       bar :: IO ()
+       bar = do
+         putStrLn "hello"
+         putStrLn "world"
+      |]

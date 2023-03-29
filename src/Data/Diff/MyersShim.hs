@@ -11,12 +11,12 @@ import Prelude hiding (read)
 
 
 editScriptToChangeEvents :: VU.Vector Char -> VU.Vector Char -> Seq Edit -> Seq ChangeEvent
-editScriptToChangeEvents left right = go mempty 0 0 0
+editScriptToChangeEvents left right = go mempty 0 0 0 0
   where
-    go :: Seq ChangeEvent -> Int -> Int -> Int -> Seq Edit -> Seq ChangeEvent
-    go seqSoFar _ _ _ Empty = seqSoFar
+    go :: Seq ChangeEvent -> Int -> Int -> Int -> Int -> Seq Edit -> Seq ChangeEvent
+    go seqSoFar _ _ _ _ Empty = seqSoFar
 
-    go seqSoFar lastPos curLine curCh ((EditDelete from to) :<| rest) = go (seqSoFar |> newChange) newPos newLine newCh rest
+    go seqSoFar lastPos curLine curCh offset ((EditDelete ((\x -> x - offset) -> from) ((\x -> x - offset) -> to)) :<| rest) = go (seqSoFar |> newChange) newPos newLine newCh newOffset rest
       where
         newChange = ChangeEvent range ""
         range = Range (Position l1 c1) (Position l2 c2)
@@ -31,15 +31,17 @@ editScriptToChangeEvents left right = go mempty 0 0 0
         numNewlinesInDeleted = countNewlines deleted
 
         l2 = l1 + numNewlinesInDeleted
-        c2 = if | numNewlinesInDeleted == 0 -> curCh + (from - to + 1)
+        c2 = if | numNewlinesInDeleted == 0 -> curCh + (to + 1 - lastPos)
                 | otherwise -> 43
 
         newPos = lastPos
         newLine = curLine
         newCh = curCh
+        newOffset = offset + to - from + 1
 
-    go seqSoFar lastPos curLine curCh ((EditInsert at from to) :<| rest) = go (seqSoFar |> newChange) newPos newLine newCh rest
+    go seqSoFar lastPos curLine curCh offset ((EditInsert at from to) :<| rest) = go (seqSoFar |> newChange) newPos newLine newCh newOffset rest
       where
+        newOffset = undefined
         newChange = undefined
         newPos = undefined
         newLine = undefined
