@@ -36,7 +36,7 @@ spec = describe "VectorMyers" $ do
 
   describe "Double inserts" $ do
     checkDiff "" "ab" [mkInsert (0, 0) (0, 0) "ab"]
-    -- checkDiff "x" "xab" [mkInsert (0, 1) (0, 1) "a", mkInsert (0, 2) (0, 2) "b"]
+    checkDiff "x" "xab" [mkInsert (0, 1) (0, 1) "a", mkInsert (0, 2) (0, 2) "b"]
 
 
 
