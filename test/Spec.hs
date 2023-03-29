@@ -9,6 +9,7 @@ import Spec.UniMyersSpec as UniMyersSpec
 #endif
 
 import Spec.DiffMyersSpec as DiffMyersSpec
+import Spec.VectorIOMyersSpec as VectorIOMyersSpec
 
 
 main :: IO ()
@@ -18,3 +19,5 @@ main = runSandwichWithCommandLineArgs defaultOptions $ do
 #endif
 
   DiffMyersSpec.spec
+
+  VectorIOMyersSpec.spec

@@ -3,15 +3,13 @@ module Data.Diff.UniMyersShim (
   utilDiff
   ) where
 
+import qualified Data.Diff.UniMyers as UM
 import Data.Function
 import qualified Data.List as L
 import qualified Data.Text as T
-import Language.LSP.Types
-
-import qualified Data.Diff.UniMyers as UM
 
 
-utilDiffToLspDiff :: [UM.DiffElement Char] -> [TextDocumentContentChangeEvent]
+utilDiffToLspDiff :: [UM.DiffElement Char] -> [ChangeEvent]
 utilDiffToLspDiff elems = go [] 0 0 elems
   where
     go events curLine curChar ((UM.InBoth chars):xs) = go events curLine' curChar' xs
@@ -19,7 +17,7 @@ utilDiffToLspDiff elems = go [] 0 0 elems
         curLine' = curLine + countNewlines chars
         curChar' = if hasNewline chars then fromIntegral (lengthOfLastLine chars) else curChar + fromIntegral (L.length chars)
 
-    go events curLine curChar ((UM.InFirst chars):xs) = go ((TextDocumentContentChangeEvent (Just (Range startPos endPos)) Nothing ""):events) curLine' curChar' xs
+    go events curLine curChar ((UM.InFirst chars):xs) = go ((ChangeEvent (Just (Range startPos endPos)) Nothing ""):events) curLine' curChar' xs
       where
         startPos = Position curLine curChar
         endPos = Position (curLine + countNewlines chars) (if hasNewline chars then fromIntegral (lengthOfLastLine chars) else curChar + fromIntegral (L.length chars))
@@ -27,7 +25,7 @@ utilDiffToLspDiff elems = go [] 0 0 elems
         curLine' = curLine
         curChar' = curChar
 
-    go events curLine curChar ((UM.InSecond chars):xs) = go ((TextDocumentContentChangeEvent (Just (Range startPos endPos)) Nothing (T.pack chars)):events) curLine' curChar' xs
+    go events curLine curChar ((UM.InSecond chars):xs) = go ((ChangeEvent (Just (Range startPos endPos)) Nothing (T.pack chars)):events) curLine' curChar' xs
       where
         startPos = Position curLine curChar
         endPos = startPos

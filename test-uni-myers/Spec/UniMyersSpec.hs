@@ -5,7 +5,6 @@ import Control.Applicative
 import Data.Diff.UniMyersShim
 import Data.Text as T
 import Debug.Trace
-import Language.LSP.Types
 import Test.QuickCheck as Q
 import Test.QuickCheck.Instances.Text
 import Test.Sandwich
@@ -18,10 +17,10 @@ spec :: TopSpec
 spec = describe "uni_myers" $ do
   describe "Single-line cases" $ do
     it "simple insertion" $ do
-      utilDiff "ab" "abc" `shouldBe` ([TextDocumentContentChangeEvent (Just (Range (Position 0 2) (Position 0 2))) Nothing "c"])
+      utilDiff "ab" "abc" `shouldBe` ([ChangeEvent (Just (Range (Position 0 2) (Position 0 2))) Nothing "c"])
 
     it "simple deletion" $ do
-      utilDiff "abc" "ab" `shouldBe` ([TextDocumentContentChangeEvent (Just (Range (Position 0 2) (Position 0 3))) Nothing ""])
+      utilDiff "abc" "ab" `shouldBe` ([ChangeEvent (Just (Range (Position 0 2) (Position 0 3))) Nothing ""])
 
   introduceQuickCheck $ modifyMaxSuccess (const 1000) $ do
     prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to

@@ -34,7 +34,9 @@ flag uni_myers
 library
   exposed-modules:
       Data.Diff.DiffMyersShim
-      Data.Diff.Myers
+      Data.Diff.MyersShim
+      Data.Diff.Types
+      Data.Diff.VectorIOMyers
       Lib
   other-modules:
       Paths_myers_diff
@@ -58,8 +60,8 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , containers
     , loop
-    , lsp-types
     , primitive
     , text
     , vector
@@ -84,6 +86,7 @@ test-suite myers-diff-test
   main-is: Spec.hs
   other-modules:
       Spec.DiffMyersSpec
+      Spec.VectorIOMyersSpec
       TestLib.Apply
       TestLib.Generators
       Paths_myers_diff
@@ -108,8 +111,8 @@ test-suite myers-diff-test
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , containers
     , loop
-    , lsp-types
     , myers-diff
     , primitive
     , quickcheck-instances
@@ -157,10 +160,10 @@ benchmark myers-diff-benchmarks
   build-depends:
       array
     , base >=4.7 && <5
+    , containers
     , criterion
     , deepseq
     , loop
-    , lsp-types
     , myers-diff
     , primitive
     , random

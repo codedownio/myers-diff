@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-missing-export-lists #-}
 
 module TestLib.Generators where
 

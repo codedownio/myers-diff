@@ -1,15 +1,21 @@
-{-# OPTIONS_GHC -fno-warn-partial-fields #-}
+{-# LANGUAGE OverloadedLists #-}
 
-module Data.Diff.Myers (
+module Data.Diff.VectorIOMyers (
   diffTexts
   , diffStrings
   , diff
   , Edit(..)
+
+  , editScriptToChangeEvents
+  , diffTextsToChangeEvents
   ) where
 
 import Control.Monad.Primitive
 import Data.Bits (xor)
+import Data.Diff.MyersShim
+import Data.Diff.Types
 import Data.Function
+import Data.Sequence
 import Data.Text as T
 import Data.Vector.Unboxed as VU
 import Data.Vector.Unboxed.Mutable as V
@@ -19,17 +25,12 @@ import Prelude hiding (read)
 -- import Debug.Trace
 -- import GHC.Stack
 
-
-data Edit = EditDelete { deleteFrom :: Int
-                       , deleteTo :: Int }
-          | EditInsert { insertPos :: Int
-                       , insertFrom :: Int
-                       , insertTo :: Int }
-  deriving (Show, Eq)
-
 -- TODO: switch from slice to unsafeSlice once things are good
 
-diffTexts :: Text -> Text -> IO [Edit]
+diffTextsToChangeEvents :: Text -> Text -> IO [ChangeEvent]
+diffTextsToChangeEvents left right = editScriptToChangeEvents <$> diffTexts left right
+
+diffTexts :: Text -> Text -> IO (Seq Edit)
 diffTexts left right = do
   -- This is faster than V.fromList (T.unpack left), right?
   leftThawed <- V.generate (T.length left) (\i -> T.index left i)
@@ -38,7 +39,7 @@ diffTexts left right = do
   diff leftThawed rightThawed
 
 -- | To use in benchmarking against other libraries that use String
-diffStrings :: String -> String -> IO [Edit]
+diffStrings :: String -> String -> IO (Seq Edit)
 diffStrings left right = do
   leftThawed <- VU.thaw $ VU.fromList left
   rightThawed <- VU.thaw $ VU.fromList right
@@ -49,12 +50,12 @@ diffStrings left right = do
 
 diff :: (
   PrimMonad m, Unbox a, Eq a, Show a
-  ) => MVector (PrimState m) a -> MVector (PrimState m) a -> m [Edit]
+  ) => MVector (PrimState m) a -> MVector (PrimState m) a -> m (Seq Edit)
 diff e f = diff' e f 0 0
 
 diff' :: (
   PrimMonad m, Unbox a, Eq a, Show a
-  ) => MVector (PrimState m) a -> MVector (PrimState m) a -> Int -> Int -> m [Edit]
+  ) => MVector (PrimState m) a -> MVector (PrimState m) a -> Int -> Int -> m (Seq Edit)
 diff' e f i j = do
   let bigN = V.length e
   let bigM = V.length f
@@ -110,7 +111,7 @@ diff' e f i j = do
                                   slice22 <- doSlice v (bigM - v) f
                                   ret2 <- diff' slice21 slice22 (i+u) (j+v)
 
-                                  return (ret1 <> ret2) -- TODO: switch from lists to Seq for faster (log-time) concat
+                                  return (ret1 <> ret2)
                                | bigM > bigN -> do
                                   slice1 <- doSlice 0 0 e
                                   slice2 <- doSlice bigN (bigM - bigN) f
