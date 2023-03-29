@@ -36,7 +36,7 @@ library
       Data.Diff.DiffMyersShim
       Data.Diff.MyersShim
       Data.Diff.Types
-      Data.Diff.VectorIOMyers
+      Data.Diff.VectorMyers
       Lib
   other-modules:
       Paths_myers_diff

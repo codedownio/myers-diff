@@ -1,13 +1,18 @@
 {-# LANGUAGE OverloadedLists #-}
 
-module Data.Diff.VectorIOMyers (
+module Data.Diff.VectorMyers (
   diffTexts
+  , diffTextsToChangeEvents
   , diffStrings
+
+  , diffTextsIO
+  , diffTextsToChangeEventsIO
+  , diffStringsIO
+
   , diff
   , Edit(..)
 
   , editScriptToChangeEvents
-  , diffTextsToChangeEvents
   ) where
 
 import Control.Monad.Primitive

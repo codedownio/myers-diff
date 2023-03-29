@@ -5,7 +5,7 @@ module Spec.VectorMyersSpec (spec) where
 
 import Control.Monad.IO.Class
 import Data.Diff.Types
-import Data.Diff.VectorIOMyers
+import Data.Diff.VectorMyers
 import Data.String.Interpolate
 import Data.Text as T
 import Test.QuickCheck as Q
@@ -16,7 +16,7 @@ import TestLib.Generators
 
 
 spec :: TopSpec
-spec = describe "VectorIOMyers" $ do
+spec = describe "VectorMyers" $ do
   it "a -> empty" $ do
     diffTextsToChangeEvents "a" "" `shouldBe` [ChangeEvent (Range (Position 0 0) (Position 0 1)) ""]
 
