@@ -28,12 +28,6 @@ import Data.Vector.Unboxed as VU
 import Data.Vector.Unboxed.Mutable as VUM
 import Prelude hiding (read)
 
--- import Data.String.Interpolate hiding (i)
--- import Debug.Trace
--- import GHC.Stack
-
--- TODO: switch from slice to unsafeSlice once things are good
--- TODO: also change (!) to unsafeIndex
 
 -- * Pure version uses ST
 
@@ -111,9 +105,9 @@ diff'' g' p' e f i j = do
          let w = bigN - bigM
 
          -- Clear out the reused memory vectors
-         let g = VUM.slice 0 bigZ g'
+         let g = VUM.unsafeSlice 0 bigZ g'
          VUM.set g 0
-         let p = VUM.slice 0 bigZ p'
+         let p = VUM.unsafeSlice 0 bigZ p'
          VUM.set p 0
 
          flip fix 0 $ \loopBaseH -> \case
@@ -130,16 +124,16 @@ diff'' g' p' e f i j = do
                    k -> do
                      let loopK = loopBaseK (k + 2)
                      aInitial <- do
-                       prevC <- read c ((k-1) `pyMod` bigZ)
-                       nextC <- read c ((k+1) `pyMod` bigZ)
+                       prevC <- unsafeRead c ((k-1) `pyMod` bigZ)
+                       nextC <- unsafeRead c ((k+1) `pyMod` bigZ)
                        return (if (k == (-h) || (k /= h && (prevC < nextC))) then nextC else prevC + 1)
                      let bInitial = aInitial - k
                      let (s, t) = (aInitial, bInitial)
 
                      (a, b) <- flip fix (aInitial, bInitial) $ \loop (a', b') -> do
                        if | a' < bigN && b' < bigM -> do
-                              let eVal = e ! (((1 - o) * bigN) + (m*a') + (o - 1))
-                              let fVal = f ! (((1 - o) * bigM) + (m*b') + (o - 1))
+                              let eVal = e `unsafeIndex` (((1 - o) * bigN) + (m*a') + (o - 1))
+                              let fVal = f `unsafeIndex` (((1 - o) * bigM) + (m*b') + (o - 1))
                               if | eVal == fVal -> loop (a' + 1, b' + 1)
                                  | otherwise -> pure (a', b')
                           | otherwise -> pure (a', b')
@@ -147,18 +141,18 @@ diff'' g' p' e f i j = do
                      write c (k `pyMod` bigZ) a
                      let z = negate (k - w)
 
-                     cVal <- read c (k `pyMod` bigZ)
-                     dVal <- read d (z `pyMod` bigZ)
+                     cVal <- unsafeRead c (k `pyMod` bigZ)
+                     dVal <- unsafeRead d (z `pyMod` bigZ)
                      if | (bigL `pyMod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
                             let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
                             if | bigD > 1 || (x /= u && y /= v) -> do
-                                  ret1 <- diff'' g p (VU.slice 0 x e) (VU.slice 0 y f) i j
-                                  ret2 <- diff'' g p (VU.slice u (bigN - u) e) (VU.slice v (bigM - v) f) (i+u) (j+v)
+                                  ret1 <- diff'' g p (VU.unsafeSlice 0 x e) (VU.unsafeSlice 0 y f) i j
+                                  ret2 <- diff'' g p (VU.unsafeSlice u (bigN - u) e) (VU.unsafeSlice v (bigM - v) f) (i+u) (j+v)
                                   return (ret1 <> ret2)
                                | bigM > bigN -> do
-                                  diff'' g p (VU.slice 0 0 e) (VU.slice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
+                                  diff'' g p (VU.unsafeSlice 0 0 e) (VU.unsafeSlice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
                                | bigM < bigN -> do
-                                  diff'' g p (VU.slice bigM (bigN - bigM) e) (VU.slice 0 0 f) (i+bigM) (j+bigM)
+                                  diff'' g p (VU.unsafeSlice bigM (bigN - bigM) e) (VU.unsafeSlice 0 0 f) (i+bigM) (j+bigM)
                                | otherwise -> return []
                         | otherwise -> loopK
 
