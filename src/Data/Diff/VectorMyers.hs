@@ -145,13 +145,12 @@ diff'' g' p' e f i j = do
                      dVal <- unsafeRead d (z `pyMod` bigZ)
                      if | (bigL `pyMod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
                             let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
-                            if | bigD > 1 || (x /= u && y /= v) -> do
-                                  ret1 <- diff'' g p (VU.unsafeSlice 0 x e) (VU.unsafeSlice 0 y f) i j
-                                  ret2 <- diff'' g p (VU.unsafeSlice u (bigN - u) e) (VU.unsafeSlice v (bigM - v) f) (i+u) (j+v)
-                                  return (ret1 <> ret2)
-                               | bigM > bigN -> do
+                            if | bigD > 1 || (x /= u && y /= v) ->
+                                  mappend <$> diff'' g p (VU.unsafeSlice 0 x e) (VU.unsafeSlice 0 y f) i j
+                                          <*> diff'' g p (VU.unsafeSlice u (bigN - u) e) (VU.unsafeSlice v (bigM - v) f) (i+u) (j+v)
+                               | bigM > bigN ->
                                   diff'' g p (VU.unsafeSlice 0 0 e) (VU.unsafeSlice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
-                               | bigM < bigN -> do
+                               | bigM < bigN ->
                                   diff'' g p (VU.unsafeSlice bigM (bigN - bigM) e) (VU.unsafeSlice 0 0 f) (i+bigM) (j+bigM)
                                | otherwise -> return []
                         | otherwise -> loopK
