@@ -95,12 +95,23 @@ diff' :: (
   ) => Vector a -> Vector a -> Int -> Int -> m (Seq Edit)
 diff' e f i j = do
   let (bigN, bigM) = (VU.length e, VU.length f)
+  let bigZ = (2 * (min bigN bigM)) + 2
+  g <- new bigZ
+  p <- new bigZ
+  diff'' g p e f i j
+
+diff'' :: (
+  PrimMonad m, Unbox a, Eq a, Show a
+  ) => MVector (PrimState m) Int -> MVector (PrimState m) Int -> Vector a -> Vector a -> Int -> Int -> m (Seq Edit)
+diff'' g p e f i j = do
+  let (bigN, bigM) = (VU.length e, VU.length f)
   let (bigL, bigZ) = (bigN + bigM, (2 * (min bigN bigM)) + 2)
 
   if | bigN > 0 && bigM > 0 -> do
          let w = bigN - bigM
-         g <- new bigZ
-         p <- new bigZ
+         -- Clear out the reused memory vectors
+         VUM.set g 0 -- TODO: for perf, only set up to index (bigZ - 1)
+         VUM.set p 0 -- TODO: for perf, only set up to index (bigZ - 1)
 
          flip fix 0 $ \loopBaseH -> \case
            h | not (h <= ((bigL `pyDiv` 2) + (if (bigL `pyMod` 2) /= 0 then 1 else 0))) -> return []
@@ -138,13 +149,13 @@ diff' e f i j = do
                      if | (bigL `pyMod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
                             let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
                             if | bigD > 1 || (x /= u && y /= v) -> do
-                                  ret1 <- diff' (VU.slice 0 x e) (VU.slice 0 y f) i j
-                                  ret2 <- diff' (VU.slice u (bigN - u) e) (VU.slice v (bigM - v) f) (i+u) (j+v)
+                                  ret1 <- diff'' g p (VU.slice 0 x e) (VU.slice 0 y f) i j
+                                  ret2 <- diff'' g p (VU.slice u (bigN - u) e) (VU.slice v (bigM - v) f) (i+u) (j+v)
                                   return (ret1 <> ret2)
                                | bigM > bigN -> do
-                                  diff' (VU.slice 0 0 e) (VU.slice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
+                                  diff'' g p (VU.slice 0 0 e) (VU.slice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
                                | bigM < bigN -> do
-                                  diff' (VU.slice bigM (bigN - bigM) e) (VU.slice 0 0 f) (i+bigM) (j+bigM)
+                                  diff'' g p (VU.slice bigM (bigN - bigM) e) (VU.slice 0 0 f) (i+bigM) (j+bigM)
                                | otherwise -> return []
                         | otherwise -> loopK
 
