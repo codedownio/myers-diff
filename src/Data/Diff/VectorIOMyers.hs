@@ -14,11 +14,12 @@ import Control.Monad.Primitive
 import Data.Bits (xor)
 import Data.Diff.MyersShim
 import Data.Diff.Types
+import qualified Data.Foldable as F
 import Data.Function
-import Data.Sequence
+import Data.Sequence as Seq
 import Data.Text as T
 import Data.Vector.Unboxed as VU
-import Data.Vector.Unboxed.Mutable as V
+import Data.Vector.Unboxed.Mutable as VUM
 import Prelude hiding (read)
 
 -- import Data.String.Interpolate hiding (i)
@@ -26,23 +27,28 @@ import Prelude hiding (read)
 -- import GHC.Stack
 
 -- TODO: switch from slice to unsafeSlice once things are good
-
-diffTextsToChangeEvents :: Text -> Text -> IO [ChangeEvent]
-diffTextsToChangeEvents left right = editScriptToChangeEvents <$> diffTexts left right
+-- TODO: also change (!) to unsafeIndex
 
 diffTexts :: Text -> Text -> IO (Seq Edit)
 diffTexts left right = do
-  -- This is faster than V.fromList (T.unpack left), right?
-  leftThawed <- V.generate (T.length left) (\i -> T.index left i)
-  rightThawed <- V.generate (T.length right) (\i -> T.index right i)
+  -- This is faster than VU.fromList (T.unpack left), right?
+  let l = VU.generate (T.length left) (\i -> T.index left i)
+  let r = VU.generate (T.length right) (\i -> T.index right i)
+  diff l r
 
-  diff leftThawed rightThawed
+diffTextsToChangeEvents :: Text -> Text -> IO [ChangeEvent]
+diffTextsToChangeEvents left right = do
+  -- This is faster than VU.fromList (T.unpack left), right?
+  let l = VU.generate (T.length left) (\i -> T.index left i)
+  let r = VU.generate (T.length right) (\i -> T.index right i)
+  edits <- diff l r
+  return $ F.toList $ editScriptToChangeEvents l r edits
 
 -- | To use in benchmarking against other libraries that use String
 diffStrings :: String -> String -> IO (Seq Edit)
 diffStrings left right = do
-  leftThawed <- VU.thaw $ VU.fromList left
-  rightThawed <- VU.thaw $ VU.fromList right
+  let leftThawed = VU.fromList left
+  let rightThawed = VU.fromList right
 
   diff leftThawed rightThawed
 
@@ -50,15 +56,15 @@ diffStrings left right = do
 
 diff :: (
   PrimMonad m, Unbox a, Eq a, Show a
-  ) => MVector (PrimState m) a -> MVector (PrimState m) a -> m (Seq Edit)
+  ) => Vector a -> Vector a -> m (Seq Edit)
 diff e f = diff' e f 0 0
 
 diff' :: (
   PrimMonad m, Unbox a, Eq a, Show a
-  ) => MVector (PrimState m) a -> MVector (PrimState m) a -> Int -> Int -> m (Seq Edit)
+  ) => Vector a -> Vector a -> Int -> Int -> m (Seq Edit)
 diff' e f i j = do
-  let bigN = V.length e
-  let bigM = V.length f
+  let bigN = VU.length e
+  let bigM = VU.length f
   let bigL = bigN + bigM
   let bigZ = (2 * (min bigN bigM)) + 2
 
@@ -80,17 +86,17 @@ diff' e f i j = do
                    k | not (k <= (h - (2 * (max 0 (h - bigN))))) -> loopR
                    k -> do
                      let loopK = loopBaseK (k + 2)
-                     a <- do
+                     aInitial <- do
                        prevC <- read c ((k-1) `pyMod` bigZ)
                        nextC <- read c ((k+1) `pyMod` bigZ)
                        return (if (k == (-h) || (k /= h && (prevC < nextC))) then nextC else prevC + 1)
-                     let b = a - k
-                     let (s, t) = (a, b)
+                     let bInitial = aInitial - k
+                     let (s, t) = (aInitial, bInitial)
 
-                     (a, b) <- flip fix (a, b) $ \loop (a', b') -> do
+                     (a, b) <- flip fix (aInitial, bInitial) $ \loop (a', b') -> do
                        if | a' < bigN && b' < bigM -> do
-                              eVal <- read e (((1 - o) * bigN) + (m*a') + (o - 1))
-                              fVal <- read f (((1 - o) * bigM) + (m*b') + (o - 1))
+                              let eVal = e ! (((1 - o) * bigN) + (m*a') + (o - 1))
+                              let fVal = f ! (((1 - o) * bigM) + (m*b') + (o - 1))
                               if | eVal == fVal -> loop (a' + 1, b' + 1)
                                  | otherwise -> pure (a', b')
                           | otherwise -> pure (a', b')
@@ -103,36 +109,19 @@ diff' e f i j = do
                      if | (bigL `pyMod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
                             let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
                             if | bigD > 1 || (x /= u && y /= v) -> do
-                                  slice11 <- doSlice 0 x e
-                                  slice12 <- doSlice 0 y f
-                                  ret1 <- diff' slice11 slice12 i j
-
-                                  slice21 <- doSlice u (bigN - u) e
-                                  slice22 <- doSlice v (bigM - v) f
-                                  ret2 <- diff' slice21 slice22 (i+u) (j+v)
-
+                                  ret1 <- diff' (VU.slice 0 x e) (VU.slice 0 y f) i j
+                                  ret2 <- diff' (VU.slice u (bigN - u) e) (VU.slice v (bigM - v) f) (i+u) (j+v)
                                   return (ret1 <> ret2)
                                | bigM > bigN -> do
-                                  slice1 <- doSlice 0 0 e
-                                  slice2 <- doSlice bigN (bigM - bigN) f
-                                  diff' slice1 slice2 (i+bigN) (j+bigN)
+                                  diff' (VU.slice 0 0 e) (VU.slice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
                                | bigM < bigN -> do
-                                  slice1 <- doSlice bigM (bigN - bigM) e
-                                  slice2 <- doSlice 0 0 f
-                                  diff' slice1 slice2 (i+bigM) (j+bigM)
+                                  diff' (VU.slice bigM (bigN - bigM) e) (VU.slice 0 0 f) (i+bigM) (j+bigM)
                                | otherwise -> return []
                         | otherwise -> loopK
 
 
      | bigN > 0 -> return [EditDelete i (i + (bigN - 1))]
      | otherwise -> return [EditInsert i j (j + (bigM - 1))]
-
-doSlice :: (PrimMonad m, Unbox a) => Int -> Int -> MVector (PrimState m) a -> m (MVector (PrimState m) a)
--- doSlice start len input = do
---   output <- new len
---   V.copy output (V.slice start len input)
---   return output
-doSlice start len input = return $ V.slice start len input
 
 pyMod :: Integral a => a -> a -> a
 pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
