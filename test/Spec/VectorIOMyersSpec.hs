@@ -16,7 +16,15 @@ import TestLib.Generators
 
 spec :: TopSpec
 spec = describe "VectorIOMyers" $ do
-  it "pends" pending
+  it "a -> empty" $ do
+    liftIO (diffTextsToChangeEvents "a" "") >>= (`shouldBe` ([ChangeEvent (Range (Position 0 0) (Position 0 1)) ""]))
+
+  it "\\na -> \\n" $ do
+    liftIO (diffTextsToChangeEvents "\na" "\n") >>= (`shouldBe` ([ChangeEvent (Range (Position 1 0) (Position 1 1)) ""]))
+
+  it "\\n\\na -> \\n\\n" $ do
+    liftIO (diffTextsToChangeEvents "\n\na" "\n\n") >>= (`shouldBe` ([ChangeEvent (Range (Position 2 0) (Position 2 1)) ""]))
+
   -- describe "Single-line cases" $ do
   --   it "simple insertion" $ do
   --     liftIO (diffTextsToChangeEvents "ab" "abc") >>= (`shouldBe` ([ChangeEvent (Range (Position 0 2) (Position 0 2)) "c"]))

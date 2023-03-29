@@ -4,6 +4,7 @@ module Data.Diff.MyersShim (
   ) where
 
 import Data.Diff.Types
+import Data.Function
 import Data.Sequence
 import Data.Vector.Unboxed as VU
 import Prelude hiding (read)
@@ -13,21 +14,25 @@ editScriptToChangeEvents :: VU.Vector Char -> VU.Vector Char -> Seq Edit -> Seq 
 editScriptToChangeEvents left right = go mempty 0 0 0
   where
     go :: Seq ChangeEvent -> Int -> Int -> Int -> Seq Edit -> Seq ChangeEvent
-    go seqSoFar _lastPos _curLine _curCh Empty = seqSoFar
+    go seqSoFar _ _ _ Empty = seqSoFar
 
     go seqSoFar lastPos curLine curCh ((EditDelete from to) :<| rest) = go (seqSoFar |> newChange) newPos newLine newCh rest
       where
         newChange = ChangeEvent range ""
         range = Range (Position l1 c1) (Position l2 c2)
 
-        unchangedNewlines = countNewlines (VU.slice lastPos from left)
+        unchangedNewlines = countNewlines (VU.slice lastPos (from - lastPos) left)
 
         l1 = curLine + unchangedNewlines
         c1 = if | unchangedNewlines == 0 -> curCh + (from - lastPos)
-                | otherwise -> undefined -- then lengthOfLastNewlineInRange vec lastPos from
+                | otherwise -> lengthOfLastLine (VU.slice lastPos (from - lastPos) left)
 
-        l2 = l1 + countNewlines (VU.slice from to left)
-        c2 = undefined
+        deleted = VU.slice from (to - from) left
+        numNewlinesInDeleted = countNewlines deleted
+
+        l2 = l1 + numNewlinesInDeleted
+        c2 = if | numNewlinesInDeleted == 0 -> curCh + (from - to + 1)
+                | otherwise -> 43
 
         newPos = lastPos
         newLine = curLine
@@ -44,3 +49,10 @@ editScriptToChangeEvents left right = go mempty 0 0 0
 
 countNewlines :: VU.Vector Char -> Int
 countNewlines = foldl' (\tot ch -> if ch == '\n' then tot + 1 else tot) 0
+
+lengthOfLastLine :: Vector Char -> Int
+lengthOfLastLine vec = flip fix (0, VU.length vec - 1) $ \loop -> \case
+  (tot, i)
+    | i < 0 -> tot
+    | vec `unsafeIndex` i == '\n' -> tot
+    | otherwise -> loop (tot + 1, i - 1)
