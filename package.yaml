@@ -37,7 +37,6 @@ when:
   dependencies:
   - Diff
 
-
 default-extensions:
 - OverloadedStrings
 - QuasiQuotes
