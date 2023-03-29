@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 
-module Main where
+module Main (main) where
 
 import Test.Sandwich
 

@@ -61,6 +61,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , exceptions
     , primitive
     , text
     , vector
@@ -111,11 +112,13 @@ test-suite myers-diff-test
       QuickCheck
     , base >=4.7 && <5
     , containers
+    , exceptions
     , myers-diff
     , primitive
     , quickcheck-instances
     , sandwich
     , sandwich-quickcheck
+    , string-interpolate
     , text
     , text-rope
     , vector
@@ -161,6 +164,7 @@ benchmark myers-diff-benchmarks
     , containers
     , criterion
     , deepseq
+    , exceptions
     , myers-diff
     , primitive
     , random

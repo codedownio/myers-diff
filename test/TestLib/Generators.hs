@@ -22,9 +22,9 @@ instance Arbitrary MultiInsertOrDelete where
 
     sized $ \n -> flip fix (n, initial) $ \loop -> \case
       (0, x) -> return (MultiInsertOrDelete (initial, x))
-      (i, cur) -> do
+      (j, cur) -> do
         next <- oneof [arbitraryInsertOn cur, arbitraryDeleteOn cur]
-        loop (i - 1, next)
+        loop (j - 1, next)
 
 -- * Gen
 

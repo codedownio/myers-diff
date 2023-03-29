@@ -18,7 +18,7 @@ editScriptToChangeEvents left right = go mempty 0 0 0
     go seqSoFar _ _ _ Empty = seqSoFar
 
     -- Implicit unchanged section before delete
-    go seqSoFar pos line ch args@((EditDelete from to) :<| _) |
+    go seqSoFar pos line ch args@((EditDelete from _to) :<| _) |
       pos < from = go seqSoFar from line' ch' args
         where
           (numNewlinesEncountered, lastLineLength) = countNewlinesAndLastLineLength (VU.slice pos (from - pos) left)
@@ -26,7 +26,7 @@ editScriptToChangeEvents left right = go mempty 0 0 0
           ch' | numNewlinesEncountered == 0 = ch + (from - pos)
               | otherwise = lastLineLength
     -- Implicit unchanged section before insert
-    go seqSoFar pos line ch args@((EditInsert from rightFrom rightTo) :<| _) |
+    go seqSoFar pos line ch args@((EditInsert from _rightFrom _rightTo) :<| _) |
       pos < from = go seqSoFar from line' ch' args
         where
           (numNewlinesEncountered, lastLineLength) = countNewlinesAndLastLineLength (VU.slice pos (from - pos) left)
@@ -45,7 +45,7 @@ editScriptToChangeEvents left right = go mempty 0 0 0
         ch' = if | numNewlinesInDeleted == 0 -> ch + (to - pos + 1)
                  | otherwise -> lastLineLengthInDeleted
 
-    go seqSoFar pos line ch ((EditInsert at rightFrom rightTo) :<| rest) = go (seqSoFar |> change) pos' line' ch' rest
+    go seqSoFar pos line ch ((EditInsert _at rightFrom rightTo) :<| rest) = go (seqSoFar |> change) pos' line' ch' rest
       where
         change = ChangeEvent (Range (Position line ch) (Position line ch)) (vectorToText inserted)
         pos' = pos
