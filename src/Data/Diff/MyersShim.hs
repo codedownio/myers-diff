@@ -50,10 +50,14 @@ editScriptToChangeEvents left right = go mempty 0 0 0
 
     go seqSoFar pos line ch ((EditInsert at rightFrom rightTo) :<| rest) = go (seqSoFar |> change) pos' line' ch' rest
       where
-        change = ChangeEvent (Range (Position line ch) (Position line ch)) (vectorToText (VU.slice rightFrom (rightTo + 1 - rightFrom) right))
+        change = ChangeEvent (Range (Position line ch) (Position line ch)) (vectorToText inserted)
         pos' = pos
-        line' = line
-        ch' = ch
+
+        inserted = VU.slice rightFrom (rightTo + 1 - rightFrom) right
+        (numNewlinesInInserted, lastLineLengthInInserted) = countNewlinesAndLastLineLength (trace [i|Got inserted: #{inserted}|] inserted)
+        line' = line + numNewlinesInInserted
+        ch' = if | numNewlinesInInserted == 0 -> 43
+                 | otherwise -> lastLineLengthInInserted
 
 
 

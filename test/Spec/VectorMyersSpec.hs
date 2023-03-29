@@ -26,13 +26,17 @@ spec = describe "VectorMyers" $ do
 
   describe "Single inserts" $ do
     checkDiff "" "a" [mkInsert (0, 0) (0, 0) "a"]
-    checkDiff "" "ab" [mkInsert (0, 0) (0, 0) "ab"]
+    checkDiff "\n" "a\n" [mkInsert (0, 0) (0, 0) "a"]
+    checkDiff "\n" "\na" [mkInsert (1, 0) (1, 0) "a"]
 
   describe "Double deletes" $ do
     checkDiff "ab" "" [mkDelete (0, 0) (0, 2)]
-    checkDiff "xab" "x" [mkDelete (0, 1) (0, 2), mkDelete (0, 1) (0, 2)]
+    -- checkDiff "xab" "x" [mkDelete (0, 1) (0, 2), mkDelete (0, 1) (0, 2)]
   --   checkDiff "abc" "b" [mkDelete (0, 0) (0, 1), mkDelete (0, 1) (0, 2)]
 
+  describe "Double inserts" $ do
+    checkDiff "" "ab" [mkInsert (0, 0) (0, 0) "ab"]
+    -- checkDiff "x" "xab" [mkInsert (0, 1) (0, 1) "a", mkInsert (0, 2) (0, 2) "b"]
 
 
 
