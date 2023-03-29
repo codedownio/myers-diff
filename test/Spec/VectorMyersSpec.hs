@@ -31,8 +31,8 @@ spec = describe "VectorMyers" $ do
 
   describe "Double deletes" $ do
     checkDiff "ab" "" [mkDelete (0, 0) (0, 2)]
-    -- checkDiff "xab" "x" [mkDelete (0, 1) (0, 2), mkDelete (0, 1) (0, 2)]
-  --   checkDiff "abc" "b" [mkDelete (0, 0) (0, 1), mkDelete (0, 1) (0, 2)]
+    checkDiff "xab" "x" [mkDelete (0, 1) (0, 2), mkDelete (0, 1) (0, 2)]
+    checkDiff "abc" "b" [mkDelete (0, 0) (0, 1), mkDelete (0, 1) (0, 2)]
 
   describe "Double inserts" $ do
     checkDiff "" "ab" [mkInsert (0, 0) (0, 0) "ab"]
