@@ -11,6 +11,7 @@ module Data.Diff.VectorIOMyers (
   ) where
 
 import Control.Monad.Primitive
+import Control.Monad.ST
 import Data.Bits (xor)
 import Data.Diff.MyersShim
 import Data.Diff.Types
@@ -29,15 +30,17 @@ import Prelude hiding (read)
 -- TODO: switch from slice to unsafeSlice once things are good
 -- TODO: also change (!) to unsafeIndex
 
-diffTexts :: Text -> Text -> IO (Seq Edit)
-diffTexts left right = do
+-- * Pure version uses ST
+
+diffTexts :: Text -> Text -> Seq Edit
+diffTexts left right = runST $ do
   -- This is faster than VU.fromList (T.unpack left), right?
   let l = VU.generate (T.length left) (\i -> T.index left i)
   let r = VU.generate (T.length right) (\i -> T.index right i)
   diff l r
 
-diffTextsToChangeEvents :: Text -> Text -> IO [ChangeEvent]
-diffTextsToChangeEvents left right = do
+diffTextsToChangeEvents :: Text -> Text -> [ChangeEvent]
+diffTextsToChangeEvents left right = runST $ do
   -- This is faster than VU.fromList (T.unpack left), right?
   let l = VU.generate (T.length left) (\i -> T.index left i)
   let r = VU.generate (T.length right) (\i -> T.index right i)
@@ -45,11 +48,34 @@ diffTextsToChangeEvents left right = do
   return $ F.toList $ editScriptToChangeEvents l r edits
 
 -- | To use in benchmarking against other libraries that use String
-diffStrings :: String -> String -> IO (Seq Edit)
-diffStrings left right = do
+diffStrings :: String -> String -> Seq Edit
+diffStrings left right = runST $ do
   let leftThawed = VU.fromList left
   let rightThawed = VU.fromList right
+  diff leftThawed rightThawed
 
+-- * IO version to benchmark against
+
+diffTextsIO :: Text -> Text -> IO (Seq Edit)
+diffTextsIO left right = do
+  -- This is faster than VU.fromList (T.unpack left), right?
+  let l = VU.generate (T.length left) (\i -> T.index left i)
+  let r = VU.generate (T.length right) (\i -> T.index right i)
+  diff l r
+
+diffTextsToChangeEventsIO :: Text -> Text -> IO [ChangeEvent]
+diffTextsToChangeEventsIO left right = do
+  -- This is faster than VU.fromList (T.unpack left), right?
+  let l = VU.generate (T.length left) (\i -> T.index left i)
+  let r = VU.generate (T.length right) (\i -> T.index right i)
+  edits <- diff l r
+  return $ F.toList $ editScriptToChangeEvents l r edits
+
+-- | To use in benchmarking against other libraries that use String
+diffStringsIO :: String -> String -> IO (Seq Edit)
+diffStringsIO left right = do
+  let leftThawed = VU.fromList left
+  let rightThawed = VU.fromList right
   diff leftThawed rightThawed
 
 -- * Core

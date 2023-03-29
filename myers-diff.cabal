@@ -85,7 +85,7 @@ test-suite myers-diff-test
   main-is: Spec.hs
   other-modules:
       Spec.DiffMyersSpec
-      Spec.VectorIOMyersSpec
+      Spec.VectorMyersSpec
       TestLib.Apply
       TestLib.Generators
       Paths_myers_diff
