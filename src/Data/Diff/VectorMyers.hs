@@ -161,9 +161,11 @@ diff'' g' p' e f i j = do
      | bigM == 0 -> return []
      | otherwise -> return [EditInsert i j (j + (bigM - 1))]
 
+{-# INLINABLE pyMod #-}
 pyMod :: Integral a => a -> a -> a
 pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
 
+{-# INLINABLE pyDiv #-}
 pyDiv :: Integral a => a -> a -> a
 pyDiv x y = if (x < 0) `xor` (y < 0) then -((-x) `div` y) else x `div` y
 
