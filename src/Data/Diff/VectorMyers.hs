@@ -103,15 +103,18 @@ diff' e f i j = do
 diff'' :: (
   PrimMonad m, Unbox a, Eq a, Show a
   ) => MVector (PrimState m) Int -> MVector (PrimState m) Int -> Vector a -> Vector a -> Int -> Int -> m (Seq Edit)
-diff'' g p e f i j = do
+diff'' g' p' e f i j = do
   let (bigN, bigM) = (VU.length e, VU.length f)
   let (bigL, bigZ) = (bigN + bigM, (2 * (min bigN bigM)) + 2)
 
   if | bigN > 0 && bigM > 0 -> do
          let w = bigN - bigM
+
          -- Clear out the reused memory vectors
-         VUM.set g 0 -- TODO: for perf, only set up to index (bigZ - 1)
-         VUM.set p 0 -- TODO: for perf, only set up to index (bigZ - 1)
+         let g = VUM.slice 0 bigZ g'
+         VUM.set g 0
+         let p = VUM.slice 0 bigZ p'
+         VUM.set p 0
 
          flip fix 0 $ \loopBaseH -> \case
            h | not (h <= ((bigL `pyDiv` 2) + (if (bigL `pyMod` 2) /= 0 then 1 else 0))) -> return []
