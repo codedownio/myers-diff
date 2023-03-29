@@ -63,10 +63,8 @@ diff' :: (
   PrimMonad m, Unbox a, Eq a, Show a
   ) => Vector a -> Vector a -> Int -> Int -> m (Seq Edit)
 diff' e f i j = do
-  let bigN = VU.length e
-  let bigM = VU.length f
-  let bigL = bigN + bigM
-  let bigZ = (2 * (min bigN bigM)) + 2
+  let (bigN, bigM) = (VU.length e, VU.length f)
+  let (bigL, bigZ) = (bigN + bigM, (2 * (min bigN bigM)) + 2)
 
   if | bigN > 0 && bigM > 0 -> do
          let w = bigN - bigM
