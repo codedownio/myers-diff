@@ -17,26 +17,23 @@ import TestLib.Generators
 
 spec :: TopSpec
 spec = describe "VectorMyers" $ do
-  it "a -> empty" $ do
+  describe "Single deletes" $ do
     checkDiff "a" "" [mkDelete (0, 0) (0, 1)]
-
-  it "ab -> empty" $ do
     checkDiff "ab" "" [mkDelete (0, 0) (0, 2)]
-
-  it "ab -> a" $ do
     checkDiff "ab" "a" [mkDelete (0, 1) (0, 2)]
-
-  it "ab -> b" $ do
     checkDiff "ab" "b" [mkDelete (0, 0) (0, 1)]
+    checkDiff "\na" "\n" [mkDelete (1, 0) (1, 1)]
+    checkDiff "\n\na" "\n\n" [mkDelete (2, 0) (2, 1)]
 
-  -- it "abc -> b" $ do
+  describe "Single inserts" $ do
+    checkDiff "" "a" [mkInsert (0, 0) (0, 0) "a"]
+    checkDiff "" "ab" [mkInsert (0, 0) (0, 0) "ab"]
+
+  -- describe "Double deletes" $ do
   --   checkDiff "abc" "b" [mkDelete (0, 0) (0, 1), mkDelete (0, 1) (0, 2)]
 
-  -- it "\\na -> \\n" $ do
-  --   checkDiff "\na" "\n" [mkDelete (1, 0) (1, 1)]
 
-  it "\\n\\na -> \\n\\n" $ do
-    checkDiff "\n\na" "\n\n" [mkDelete (2, 0) (2, 1)]
+
 
   -- describe "Single-line cases" $ do
   --   it "simple insertion" $ do
@@ -49,7 +46,7 @@ spec = describe "VectorMyers" $ do
   --   prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to
   --   prop "Multiple changes" $ \(MultiInsertOrDelete (from, to)) -> verifyDiff from to
 
-checkDiff from to changes = do
+checkDiff from to changes = it (show from <> " -> " <> show to) $ do
   -- Check that the given changes actually work
   applyChangesText changes from `shouldBe` to
 
@@ -58,6 +55,9 @@ checkDiff from to changes = do
 
 
 mkDelete (l1, c1) (l2, c2) = ChangeEvent (Range (Position l1 c1) (Position l2 c2)) ""
+
+mkInsert (l1, c1) (l2, c2) t = ChangeEvent (Range (Position l1 c1) (Position l2 c2)) t
+
 
 verifyDiff from to = applyChangesText change from == to
   where change = diffTextsToChangeEvents from to

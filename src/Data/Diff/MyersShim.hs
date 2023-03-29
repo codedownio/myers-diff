@@ -40,9 +40,9 @@ editScriptToChangeEvents left right = go mempty 0 0 0
     go seqSoFar pos line ch ((EditDelete from to) :<| rest) = go (seqSoFar |> change) pos' line' ch' rest
       where
         change = ChangeEvent (Range (Position line ch) (Position line' ch')) ""
-        pos' = pos + (to - from) + 1
+        pos' = pos
 
-        deleted = VU.slice from (to - from) left
+        deleted = VU.slice from (to + 1 - from) left
         (numNewlinesInDeleted, lastLineLengthInDeleted) = countNewlinesAndLastLineLength deleted
         line' = line + numNewlinesInDeleted
         ch' = if | numNewlinesInDeleted == 0 -> ch + (to - pos + 1)
@@ -50,7 +50,7 @@ editScriptToChangeEvents left right = go mempty 0 0 0
 
     go seqSoFar pos line ch ((EditInsert at rightFrom rightTo) :<| rest) = go (seqSoFar |> change) pos' line' ch' rest
       where
-        change = ChangeEvent (Range (Position line ch) (Position line ch)) (vectorToText (VU.slice rightFrom (rightTo - rightFrom) right))
+        change = ChangeEvent (Range (Position line ch) (Position line ch)) (vectorToText (VU.slice rightFrom (rightTo + 1 - rightFrom) right))
         pos' = pos
         line' = line
         ch' = ch
