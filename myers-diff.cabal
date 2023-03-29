@@ -37,7 +37,6 @@ library
       Data.Diff.MyersShim
       Data.Diff.Types
       Data.Diff.VectorMyers
-      Lib
   other-modules:
       Paths_myers_diff
   hs-source-dirs:
