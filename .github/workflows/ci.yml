@@ -84,7 +84,10 @@ jobs:
 
     - name: Build
       run: |
-        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+        stack build --system-ghc \
+          --flag myers-diff:diff_myers \
+          --flag myers-diff:uni_myers \
+          --test --bench --no-run-tests --no-run-benchmarks
 
     - name: Test
       run: |

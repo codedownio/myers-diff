@@ -1,12 +1,10 @@
+{-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
 
 module Spec.UniMyersSpec (spec) where
 
-import Control.Applicative
+import Data.Diff.Types
 import Data.Diff.UniMyersShim
 import Data.Text as T
-import Debug.Trace
-import Test.QuickCheck as Q
-import Test.QuickCheck.Instances.Text
 import Test.Sandwich
 import Test.Sandwich.QuickCheck
 import TestLib.Apply
@@ -17,10 +15,10 @@ spec :: TopSpec
 spec = describe "uni_myers" $ do
   describe "Single-line cases" $ do
     it "simple insertion" $ do
-      utilDiff "ab" "abc" `shouldBe` ([ChangeEvent (Just (Range (Position 0 2) (Position 0 2))) Nothing "c"])
+      utilDiff "ab" "abc" `shouldBe` ([ChangeEvent (Range (Position 0 2) (Position 0 2)) "c"])
 
     it "simple deletion" $ do
-      utilDiff "abc" "ab" `shouldBe` ([ChangeEvent (Just (Range (Position 0 2) (Position 0 3))) Nothing ""])
+      utilDiff "abc" "ab" `shouldBe` ([ChangeEvent (Range (Position 0 2) (Position 0 3)) ""])
 
   introduceQuickCheck $ modifyMaxSuccess (const 1000) $ do
     prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to

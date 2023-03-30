@@ -23,19 +23,17 @@ flags:
   uni_myers:
     manual: true
     default: false
-    description: Use the diff implementation from the "uni-util" package (buggy)
+    description: Use the diff implementation from the "uni-util" package (buggy). This causes LGPL code to be included.
   diff_myers:
     manual: true
-    default: true
-    description: Use the diff implementation from the "Diff" package
+    default: false
+    description: Include the diff implementation from the "Diff" package
 
 when:
 - condition: flag(uni_myers)
   cpp-options: -DUNI_MYERS
 - condition: flag(diff_myers)
   cpp-options: -DDIFF_MYERS
-  dependencies:
-  - Diff
 
 default-extensions:
 - OverloadedStrings
@@ -74,6 +72,14 @@ library:
     - Data.Diff.UniMyersShim
     dependencies:
     - array
+  - condition: flag(diff_myers)
+    source-dirs: src-diff-myers
+    exposed-modules:
+    - Data.Diff.DiffMyersShim
+    dependencies:
+    - Diff
+
+# TODO: add executable and try profiling it
 
 tests:
   myers-diff-test:
@@ -94,6 +100,8 @@ tests:
     when:
     - condition: flag(uni_myers)
       source-dirs: test-uni-myers
+    - condition: flag(uni_myers)
+      source-dirs: test-diff-myers
 
 benchmarks:
   myers-diff-benchmarks:
@@ -110,3 +118,4 @@ benchmarks:
     - myers-diff
     - random
     - string-interpolate
+    - weigh

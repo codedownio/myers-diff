@@ -8,7 +8,10 @@ import Test.Sandwich
 import Spec.UniMyersSpec as UniMyersSpec
 #endif
 
+#ifdef DIFF_MYERS
 import Spec.DiffMyersSpec as DiffMyersSpec
+#endif
+
 import Spec.VectorMyersSpec as VectorMyersSpec
 
 
@@ -18,6 +21,8 @@ main = runSandwichWithCommandLineArgs defaultOptions $ do
   UniMyersSpec.spec
 #endif
 
+#ifdef DIFF_MYERS
   DiffMyersSpec.spec
+#endif
 
   VectorMyersSpec.spec

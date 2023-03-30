@@ -1,3 +1,7 @@
+
+-- Taken this code from https://hackage.haskell.org/package/uni-util, in the Util.Myers module
+-- This code is under the LGPL.
+
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
