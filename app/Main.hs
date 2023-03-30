@@ -13,5 +13,5 @@ main = do
   (doc, doc') <- generate $ variant (42 :: Int) $ resize 50 $ (arbitraryDoc >>= arbitraryChangesSized)
   T.putStrLn [i|Got doc: #{doc}|]
   T.putStrLn [i|Got doc': #{doc'}|]
-  let diffs = diffTexts doc doc'
+  let diffs = consolidateEditScript $ diffTexts doc doc'
   T.putStrLn [i|Edit script: #{diffs}|]

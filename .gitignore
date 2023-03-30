@@ -3,3 +3,10 @@
 test_runs
 cabal.project.local
 dist-newstyle/
+
+# Profiling
+*.aux
+*.hp
+*.prof
+*.ps
+*.svg
