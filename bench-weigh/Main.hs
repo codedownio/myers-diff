@@ -2,7 +2,7 @@
 
 module Main (main) where
 
-import qualified Data.Diff.VectorMyers as VM
+import qualified Data.Diff.Myers as VM
 import Data.String
 import Data.String.Interpolate
 import Data.Text as T

@@ -1,7 +1,7 @@
 
 module Main (main) where
 
-import Data.Diff.VectorMyers
+import Data.Diff.Myers
 import Data.String.Interpolate
 import Data.Text.IO as T
 import Test.QuickCheck

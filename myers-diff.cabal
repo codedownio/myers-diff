@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           myers-diff
-version:        0.1.0.0
+version:        0.2.0.0
 description:    Please see the README on GitHub at <https://github.com/codedownio/myers-diff#readme>
 homepage:       https://github.com/codedownio/myers-diff#readme
 bug-reports:    https://github.com/codedownio/myers-diff/issues
@@ -34,8 +34,8 @@ flag uni_myers
 
 library
   exposed-modules:
+      Data.Diff.Myers
       Data.Diff.Types
-      Data.Diff.VectorMyers
   other-modules:
       Paths_myers_diff
   hs-source-dirs:
@@ -193,6 +193,7 @@ benchmark myers-diff-criterion
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      Bench.VectorIO
       TestLib.Apply
       TestLib.Generators
       TestLib.Instances

@@ -1,23 +1,40 @@
 {-# LANGUAGE OverloadedLists #-}
 
-module Data.Diff.VectorMyers (
+{-|
+Module:      Data.Diff.Myers
+Copyright:   (c) 2023 Tom McLaughlin
+License:     BSD3
+Stability:   experimental
+Portability: portable
+
+This is a fast Haskell implementation of the Myers text diff algorithm[1]. It is heavily inspired by the Python version in [this post](https://blog.robertelder.org/diff-algorithm/), and should have the same @O(min(len(a), len(b)))@ space complexity. (By contrast, the [Diff](https://hackage.haskell.org/package/Diff) package advertises @O(ab)@ space complexity.) The implementation uses unboxed mutable vectors for performance.
+
+This repo also can also build a couple other versions for benchmarking comparison, gated behind flags.
+
+* @-funi_myers@ will build the version from the [uni-util](https://hackage.haskell.org/package/uni-util-2.3.0.3/docs/Util-Myers.html) package.
+* @-fdiff_myers@ will use the [Diff](https://hackage.haskell.org/package/Diff) package.
+
+[1]: E. Myers (1986). "An O(ND) Difference Algorithm and Its Variations". Algorithmica. 1 (2): 251–266. CiteSeerX [10.1.1.4.6927](https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.4.6927). doi:[10.1007/BF01840446](https://doi.org/10.1007%2FBF01840446). S2CID [6996809](https://api.semanticscholar.org/CorpusID:6996809).
+
+-}
+
+module Data.Diff.Myers (
+  -- * Pure diffing (uses ST monad)
   diffTexts
   , diffTextsToChangeEvents
   , diffTextsToChangeEventsConsolidate
   , diffTextsToChangeEvents'
   , diffStrings
 
-  , diffTextsIO
-  , diffTextsToChangeEventsIO
-  , diffTextsToChangeEventsIOConsolidate
-  , diffTextsToChangeEventsIO'
-  , diffStringsIO
-
+  -- * Lowest level diff function
   , diff
-  , Edit(..)
 
+  -- * Working with edit scripts
   , editScriptToChangeEvents
   , consolidateEditScript
+
+  -- * Types
+  , Edit(..)
   ) where
 
 import Control.Monad.Primitive
@@ -33,8 +50,7 @@ import Data.Vector.Unboxed.Mutable as VUM
 import Prelude hiding (read)
 
 
--- * Pure version uses ST
-
+-- | Diff 'Text's to produce an edit script.
 diffTexts :: Text -> Text -> Seq Edit
 diffTexts left right = runST $ do
   -- This is faster than VU.fromList (T.unpack left), right?
@@ -42,51 +58,24 @@ diffTexts left right = runST $ do
   let r = VU.generate (T.length right) (\i -> T.index right i)
   diff l r
 
+-- | Diff 'Text's to produce LSP-style change events.
 diffTextsToChangeEvents :: Text -> Text -> [ChangeEvent]
 diffTextsToChangeEvents = diffTextsToChangeEvents' id
 
+-- | Diff 'Text's to produce consolidated LSP-style change events.
 diffTextsToChangeEventsConsolidate :: Text -> Text -> [ChangeEvent]
 diffTextsToChangeEventsConsolidate = diffTextsToChangeEvents' consolidateEditScript
 
+-- | Diff 'Text's with a custom consolidation function.
 diffTextsToChangeEvents' :: (Seq Edit -> Seq Edit) -> Text -> Text -> [ChangeEvent]
 diffTextsToChangeEvents' consolidateFn left right = F.toList $ editScriptToChangeEvents l r (consolidateFn (runST (diff l r)))
   where
     l = VU.generate (T.length left) (\i -> T.index left i)
     r = VU.generate (T.length right) (\i -> T.index right i)
 
--- | To use in benchmarking against other libraries that use String
+-- | To use in benchmarking against other libraries that use String.
 diffStrings :: String -> String -> Seq Edit
 diffStrings left right = runST $ do
-  let leftThawed = VU.fromList left
-  let rightThawed = VU.fromList right
-  diff leftThawed rightThawed
-
--- * IO version to benchmark against
-
-diffTextsIO :: Text -> Text -> IO (Seq Edit)
-diffTextsIO left right = do
-  -- This is faster than VU.fromList (T.unpack left), right?
-  let l = VU.generate (T.length left) (\i -> T.index left i)
-  let r = VU.generate (T.length right) (\i -> T.index right i)
-  diff l r
-
-diffTextsToChangeEventsIO :: Text -> Text -> IO [ChangeEvent]
-diffTextsToChangeEventsIO = diffTextsToChangeEventsIO' id
-
-diffTextsToChangeEventsIOConsolidate :: Text -> Text -> IO [ChangeEvent]
-diffTextsToChangeEventsIOConsolidate = diffTextsToChangeEventsIO' consolidateEditScript
-
-diffTextsToChangeEventsIO' :: (Seq Edit -> Seq Edit) -> Text -> Text -> IO [ChangeEvent]
-diffTextsToChangeEventsIO' consolidateFn left right = do
-  -- This is faster than VU.fromList (T.unpack left), right?
-  let l = VU.generate (T.length left) (\i -> T.index left i)
-  let r = VU.generate (T.length right) (\i -> T.index right i)
-  edits <- diff l r
-  return $ F.toList $ editScriptToChangeEvents l r (consolidateFn edits)
-
--- | To use in benchmarking against other libraries that use String
-diffStringsIO :: String -> String -> IO (Seq Edit)
-diffStringsIO left right = do
   let leftThawed = VU.fromList left
   let rightThawed = VU.fromList right
   diff leftThawed rightThawed
@@ -183,8 +172,7 @@ pyDiv :: Integral a => a -> a -> a
 pyDiv x y = if (x < 0) `xor` (y < 0) then -((-x) `div` y) else x `div` y
 
 
--- * Converting edit script to LSP-style change events
-
+-- | Convert edit script to LSP-style change events.
 editScriptToChangeEvents :: VU.Vector Char -> VU.Vector Char -> Seq Edit -> Seq ChangeEvent
 editScriptToChangeEvents left right = go mempty 0 0 0
   where
@@ -242,6 +230,7 @@ editScriptToChangeEvents left right = go mempty 0 0 0
 -- fromList [EditInsert {insertPos = 1, insertFrom = 1, insertTo = 1},EditInsert {insertPos = 1, insertFrom = 2, insertTo = 2}]
 -- λ> diffTexts "xab" "x"
 -- fromList [EditDelete {deleteFrom = 1, deleteTo = 1},EditDelete {deleteFrom = 2, deleteTo = 2}]
+-- | Consolidate adjacent edit script entries to shorten the script.
 consolidateEditScript :: Seq Edit -> Seq Edit
 consolidateEditScript ((EditInsert pos1 from1 to1) :<| (EditInsert pos2 from2 to2) :<| rest)
   | pos1 == pos2 && to1 + 1 == from2 = consolidateEditScript ((EditInsert pos1 from1 to2) <| rest)

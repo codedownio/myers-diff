@@ -6,7 +6,7 @@ module Spec.VectorMyersSpec (spec) where
 
 import Control.Monad.Catch (MonadThrow)
 import Data.Diff.Types
-import Data.Diff.VectorMyers
+import Data.Diff.Myers
 import Data.Text as T
 import Test.Sandwich
 import Test.Sandwich.QuickCheck
