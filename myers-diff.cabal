@@ -33,7 +33,6 @@ flag uni_myers
 
 library
   exposed-modules:
-      Data.Diff.MyersShim
       Data.Diff.Types
       Data.Diff.VectorMyers
   other-modules:
@@ -87,9 +86,13 @@ library
 executable myers-diff
   main-is: Main.hs
   other-modules:
+      TestLib.Apply
+      TestLib.Generators
+      TestLib.Util
       Paths_myers_diff
   hs-source-dirs:
       app
+      test-lib
   default-extensions:
       OverloadedStrings
       QuasiQuotes
@@ -113,6 +116,7 @@ executable myers-diff
     , exceptions
     , myers-diff
     , primitive
+    , quickcheck-instances
     , string-interpolate
     , text
     , text-rope
@@ -134,6 +138,7 @@ test-suite myers-diff-test
       Paths_myers_diff
   hs-source-dirs:
       test
+      test-lib
   default-extensions:
       OverloadedStrings
       QuasiQuotes

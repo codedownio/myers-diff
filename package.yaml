@@ -85,6 +85,7 @@ executables:
     main: Main.hs
     source-dirs:
     - app
+    - test-lib
     ghc-options:
     - -threaded
     - -rtsopts
@@ -95,11 +96,14 @@ executables:
     - string-interpolate
     - text-rope
     - QuickCheck
+    - quickcheck-instances
 
 tests:
   myers-diff-test:
     main:                Spec.hs
-    source-dirs:         test
+    source-dirs:
+    - test
+    - test-lib
     ghc-options:
     - -threaded
     - -rtsopts

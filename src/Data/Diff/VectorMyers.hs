@@ -18,7 +18,6 @@ module Data.Diff.VectorMyers (
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Bits (xor)
-import Data.Diff.MyersShim
 import Data.Diff.Types
 import qualified Data.Foldable as F
 import Data.Function
@@ -167,3 +166,57 @@ pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
 {-# INLINABLE pyDiv #-}
 pyDiv :: Integral a => a -> a -> a
 pyDiv x y = if (x < 0) `xor` (y < 0) then -((-x) `div` y) else x `div` y
+
+
+-- * Converting edit script to LSP-style change events
+
+editScriptToChangeEvents :: VU.Vector Char -> VU.Vector Char -> Seq Edit -> Seq ChangeEvent
+editScriptToChangeEvents left right = go mempty 0 0 0
+  where
+    go :: Seq ChangeEvent -> Int -> Int -> Int -> Seq Edit -> Seq ChangeEvent
+    go seqSoFar _ _ _ Empty = seqSoFar
+
+    -- Implicit unchanged section before delete
+    go seqSoFar pos line ch args@((EditDelete from _to) :<| _) |
+      pos < from = go seqSoFar from line' ch' args
+        where
+          (numNewlinesEncountered, lastLineLength) = countNewlinesAndLastLineLength (VU.slice pos (from - pos) left)
+          line' = line + numNewlinesEncountered
+          ch' | numNewlinesEncountered == 0 = ch + (from - pos)
+              | otherwise = lastLineLength
+    -- Implicit unchanged section before insert
+    go seqSoFar pos line ch args@((EditInsert from _rightFrom _rightTo) :<| _) |
+      pos < from = go seqSoFar from line' ch' args
+        where
+          (numNewlinesEncountered, lastLineLength) = countNewlinesAndLastLineLength (VU.slice pos (from - pos) left)
+          line' = line + numNewlinesEncountered
+          ch' | numNewlinesEncountered == 0 = ch + (from - pos)
+              | otherwise = lastLineLength
+
+    go seqSoFar pos line ch ((EditDelete from to) :<| rest) = go (seqSoFar |> change) pos' line ch rest
+      where
+        change = ChangeEvent (Range (Position line ch) (Position line' ch')) ""
+        pos' = to + 1
+
+        deleted = VU.slice from (to + 1 - from) left
+        (numNewlinesInDeleted, lastLineLengthInDeleted) = countNewlinesAndLastLineLength deleted
+        line' = line + numNewlinesInDeleted
+        ch' = if | numNewlinesInDeleted == 0 -> ch + (to - pos + 1)
+                 | otherwise -> lastLineLengthInDeleted
+
+    go seqSoFar pos line ch ((EditInsert _at rightFrom rightTo) :<| rest) = go (seqSoFar |> change) pos' line' ch' rest
+      where
+        change = ChangeEvent (Range (Position line ch) (Position line ch)) (vectorToText inserted)
+        pos' = pos
+
+        inserted = VU.slice rightFrom (rightTo + 1 - rightFrom) right
+        (numNewlinesInInserted, lastLineLengthInInserted) = countNewlinesAndLastLineLength inserted
+        line' = line + numNewlinesInInserted
+        ch' = if | numNewlinesInInserted == 0 -> ch + VU.length inserted
+                 | otherwise -> lastLineLengthInInserted
+
+    countNewlinesAndLastLineLength :: VU.Vector Char -> (Int, Int)
+    countNewlinesAndLastLineLength = VU.foldl' (\(tot, lastLineLength) ch -> if ch == '\n' then (tot + 1, 0) else (tot, lastLineLength + 1)) (0, 0)
+
+    vectorToText :: VU.Vector Char -> T.Text
+    vectorToText = T.pack . VU.toList
