@@ -88,6 +88,7 @@ test-suite myers-diff-test
       Spec.VectorMyersSpec
       TestLib.Apply
       TestLib.Generators
+      TestLib.Util
       Paths_myers_diff
   hs-source-dirs:
       test
@@ -167,6 +168,7 @@ benchmark myers-diff-benchmarks
     , myers-diff
     , primitive
     , random
+    , string-interpolate
     , text
     , vector
   default-language: Haskell2010

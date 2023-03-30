@@ -9,6 +9,7 @@ import Control.DeepSeq
 import Criterion
 import Criterion.Main
 import Data.Diff.Types
+import Data.String.Interpolate
 import Data.Text as T
 import GHC.Generics
 
@@ -28,7 +29,7 @@ deriving instance NFData ChangeEvent
 getPair :: IO (String, String, Text, Text)
 getPair = do
   putStrLn "Generating pair"
-  return ("abc", "abcd", T.pack "abc", T.pack "abcd")
+  return (T.unpack file1, T.unpack file2, file1, file2)
 
 main :: IO ()
 main = defaultMain [
@@ -38,3 +39,44 @@ main = defaultMain [
       , bench "Vector" $ nf (\(x, y) -> VM.diffTextsToChangeEvents x y) (initialText, finalText)
     ]
   ]
+
+
+file1 :: Text
+file1 =
+  [__i|foo = 42
+       :t foo
+
+       homophones <- readFile "homophones.list"
+
+       putStrLn "HI"
+
+       abc
+
+       import Data.Aeson as A
+
+       -- | Here's a nice comment on bar
+       bar :: IO ()
+       bar = do
+         putStrLn "hello"
+         putStrLn "world"
+      |]
+
+file2 :: Text
+file2 =
+  [__i|foo = 42
+       :t foo
+
+       homophones <- readFile "homophones.list"
+
+       putStrLn "HI"
+
+       a
+
+       import Data.Aeson as A
+
+       -- | Here's a nice comment on bar
+       bar :: IO ()
+       bar = do
+         putStrLn "hello"
+         putStrLn "world"
+      |]

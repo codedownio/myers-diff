@@ -11,6 +11,7 @@ import Test.Sandwich
 import Test.Sandwich.QuickCheck
 import TestLib.Apply
 import TestLib.Generators
+import TestLib.Util
 
 
 spec :: TopSpec
@@ -36,9 +37,14 @@ spec = describe "VectorMyers" $ do
     checkDiff "" "ab" [mkInsert (0, 0) (0, 0) "ab"]
     checkDiff "x" "xab" [mkInsert (0, 1) (0, 1) "a", mkInsert (0, 2) (0, 2) "b"]
 
-  describe "QuickCheck" $ introduceQuickCheck $ modifyMaxSuccess (const 10000) $ do
-    prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to
-    prop "Multiple changes" $ \(MultiInsertOrDelete (from, to)) -> verifyDiff from to
+  describe "QuickCheck" $ introduceQuickCheck $ modifyMaxSuccess (const 100n00) $ do
+    describe "Arbitrary text" $ do
+      prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to
+      prop "Multiple changes" $ \(MultiInsertOrDelete (from, to)) -> verifyDiff from to
+
+    describe "Arbitrary document (series of arbitrary texts with plenty of newlines)" $ do
+      prop "Single change" $ \(DocInsertOrDelete (from, to)) -> verifyDiff from to
+      prop "Multiple changes" $ \(DocMultiInsertOrDelete (from, to)) -> verifyDiff from to
 
 
 checkDiff :: MonadThrow m => Text -> Text -> [ChangeEvent] -> SpecFree context m ()
@@ -48,12 +54,6 @@ checkDiff from to changes = it (show from <> " -> " <> show to) $ do
 
   -- Diff produces the desired changse
   diffTextsToChangeEvents from to `shouldBe` changes
-
-mkDelete :: (Int, Int) -> (Int, Int) -> ChangeEvent
-mkDelete (l1, c1) (l2, c2) = ChangeEvent (Range (Position l1 c1) (Position l2 c2)) ""
-
-mkInsert :: (Int, Int) -> (Int, Int) -> Text -> ChangeEvent
-mkInsert (l1, c1) (l2, c2) t = ChangeEvent (Range (Position l1 c1) (Position l2 c2)) t
 
 verifyDiff :: Text -> Text -> Bool
 verifyDiff from to = applyChangesText change from == to

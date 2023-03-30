@@ -109,3 +109,4 @@ benchmarks:
     - deepseq
     - myers-diff
     - random
+    - string-interpolate
