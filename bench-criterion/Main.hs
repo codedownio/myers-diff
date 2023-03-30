@@ -1,33 +1,18 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Main (main) where
 
-import Control.DeepSeq
 import Criterion
 import Criterion.Main
-import Data.Diff.Types
 import qualified Data.Diff.VectorMyers as VM
 import Data.String.Interpolate
 import Data.Text as T
-import GHC.Generics
+import TestLib.Instances ()
 
 #ifdef DIFF_MYERS
 import qualified Data.Diff.DiffMyersShim as DM
 #endif
 
-
-deriving instance Generic Position
-deriving instance NFData Position
-
-deriving instance Generic Range
-deriving instance NFData Range
-
-deriving instance Generic ChangeEvent
-deriving instance NFData ChangeEvent
 
 getPair :: IO (String, String, Text, Text)
 getPair = do
@@ -38,7 +23,10 @@ main :: IO ()
 main = defaultMain [
   env getPair $ \(~(initial, final, initialText, finalText)) ->
     bgroup "Simple" [
-      bench "Vector" $ nf (\(x, y) -> VM.diffTextsToChangeEvents x y) (initialText, finalText)
+      bench "Vector to edit script" $ nf (\(x, y) -> VM.diffTexts x y) (initialText, finalText)
+      , bench "Vector to edit script (consolidated)" $ nf (\(x, y) -> VM.consolidateEditScript $ VM.diffTexts x y) (initialText, finalText)
+      , bench "Vector to ChangeEvent" $ nf (\(x, y) -> VM.diffTextsToChangeEvents x y) (initialText, finalText)
+      , bench "Vector to ChangeEvents (consolidated)" $ nf (\(x, y) -> VM.diffTextsToChangeEventsConsolidate x y) (initialText, finalText)
 
 #ifdef DIFF_MYERS
       , bench "Diff" $ nf (\(x, y) -> DM.diffDiff x y) (initial, final)

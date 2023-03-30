@@ -1,13 +1,7 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Main (main) where
 
-import Control.DeepSeq
-import Data.Diff.Types
 import qualified Data.Diff.VectorMyers as VM
 import Data.String
 import Data.String.Interpolate
@@ -15,22 +9,13 @@ import Data.Text as T
 import Data.Text.Encoding as T
 import qualified Data.Vector.Unboxed as VU
 import Data.Vector.Unboxed.Mutable as VUM
-import GHC.Generics
+import TestLib.Instances ()
 import Weigh
 
 #ifdef DIFF_MYERS
 import qualified Data.Diff.DiffMyersShim as DM
 #endif
 
-
-deriving instance Generic Position
-deriving instance NFData Position
-
-deriving instance Generic Range
-deriving instance NFData Range
-
-deriving instance Generic ChangeEvent
-deriving instance NFData ChangeEvent
 
 main :: IO ()
 main = mainWith $ do

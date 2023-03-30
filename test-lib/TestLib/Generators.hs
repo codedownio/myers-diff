@@ -35,7 +35,8 @@ arbitraryChangesSized :: Text -> Gen (Text, Text)
 arbitraryChangesSized initial = sized $ \n -> flip fix (n, initial) $ \loop -> \case
   (0, x) -> return (initial, x)
   (j, cur) -> do
-    next <- oneof [arbitraryInsertOn cur, arbitraryDeleteOn cur]
+    -- Prefer inserts to deletes at a 3:1 ratio
+    next <- oneof [arbitraryInsertOn cur, arbitraryInsertOn cur, arbitraryInsertOn cur, arbitraryDeleteOn cur]
     loop (j - 1, next)
 
 -- * Inserts and deletes

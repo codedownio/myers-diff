@@ -3,16 +3,21 @@
 module Data.Diff.VectorMyers (
   diffTexts
   , diffTextsToChangeEvents
+  , diffTextsToChangeEventsConsolidate
+  , diffTextsToChangeEvents'
   , diffStrings
 
   , diffTextsIO
   , diffTextsToChangeEventsIO
+  , diffTextsToChangeEventsIOConsolidate
+  , diffTextsToChangeEventsIO'
   , diffStringsIO
 
   , diff
   , Edit(..)
 
   , editScriptToChangeEvents
+  , consolidateEditScript
   ) where
 
 import Control.Monad.Primitive
@@ -38,12 +43,16 @@ diffTexts left right = runST $ do
   diff l r
 
 diffTextsToChangeEvents :: Text -> Text -> [ChangeEvent]
-diffTextsToChangeEvents left right = runST $ do
-  -- This is faster than VU.fromList (T.unpack left), right?
-  let l = VU.generate (T.length left) (\i -> T.index left i)
-  let r = VU.generate (T.length right) (\i -> T.index right i)
-  edits <- diff l r
-  return $ F.toList $ editScriptToChangeEvents l r edits
+diffTextsToChangeEvents = diffTextsToChangeEvents' id
+
+diffTextsToChangeEventsConsolidate :: Text -> Text -> [ChangeEvent]
+diffTextsToChangeEventsConsolidate = diffTextsToChangeEvents' consolidateEditScript
+
+diffTextsToChangeEvents' :: (Seq Edit -> Seq Edit) -> Text -> Text -> [ChangeEvent]
+diffTextsToChangeEvents' consolidateFn left right = F.toList $ editScriptToChangeEvents l r (consolidateFn (runST (diff l r)))
+  where
+    l = VU.generate (T.length left) (\i -> T.index left i)
+    r = VU.generate (T.length right) (\i -> T.index right i)
 
 -- | To use in benchmarking against other libraries that use String
 diffStrings :: String -> String -> Seq Edit
@@ -62,12 +71,18 @@ diffTextsIO left right = do
   diff l r
 
 diffTextsToChangeEventsIO :: Text -> Text -> IO [ChangeEvent]
-diffTextsToChangeEventsIO left right = do
+diffTextsToChangeEventsIO = diffTextsToChangeEventsIO' id
+
+diffTextsToChangeEventsIOConsolidate :: Text -> Text -> IO [ChangeEvent]
+diffTextsToChangeEventsIOConsolidate = diffTextsToChangeEventsIO' consolidateEditScript
+
+diffTextsToChangeEventsIO' :: (Seq Edit -> Seq Edit) -> Text -> Text -> IO [ChangeEvent]
+diffTextsToChangeEventsIO' consolidateFn left right = do
   -- This is faster than VU.fromList (T.unpack left), right?
   let l = VU.generate (T.length left) (\i -> T.index left i)
   let r = VU.generate (T.length right) (\i -> T.index right i)
   edits <- diff l r
-  return $ F.toList $ editScriptToChangeEvents l r edits
+  return $ F.toList $ editScriptToChangeEvents l r (consolidateFn edits)
 
 -- | To use in benchmarking against other libraries that use String
 diffStringsIO :: String -> String -> IO (Seq Edit)
@@ -220,3 +235,17 @@ editScriptToChangeEvents left right = go mempty 0 0 0
 
     vectorToText :: VU.Vector Char -> T.Text
     vectorToText = T.pack . VU.toList
+
+-- * Consolidate edits
+
+-- λ> diffTexts "x" "xab"
+-- fromList [EditInsert {insertPos = 1, insertFrom = 1, insertTo = 1},EditInsert {insertPos = 1, insertFrom = 2, insertTo = 2}]
+-- λ> diffTexts "xab" "x"
+-- fromList [EditDelete {deleteFrom = 1, deleteTo = 1},EditDelete {deleteFrom = 2, deleteTo = 2}]
+consolidateEditScript :: Seq Edit -> Seq Edit
+consolidateEditScript ((EditInsert pos1 from1 to1) :<| (EditInsert pos2 from2 to2) :<| rest)
+  | pos1 == pos2 && to1 + 1 == from2 = consolidateEditScript ((EditInsert pos1 from1 to2) <| rest)
+consolidateEditScript ((EditDelete from1 to1) :<| (EditDelete from2 to2) :<| rest)
+  | to1 + 1 == from2 = consolidateEditScript ((EditDelete from1 to2) <| rest)
+consolidateEditScript (x :<| y :<| rest) = x <| (consolidateEditScript (y <| rest))
+consolidateEditScript x = x
