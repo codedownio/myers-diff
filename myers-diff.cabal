@@ -6,7 +6,7 @@ cabal-version: 1.12
 
 name:           myers-diff
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/myers-diff#readme>
+description:    Please see the README on GitHub at <https://github.com/codedownio/myers-diff#readme>
 homepage:       https://github.com/codedownio/myers-diff#readme
 bug-reports:    https://github.com/codedownio/myers-diff/issues
 author:         Tom McLaughlin

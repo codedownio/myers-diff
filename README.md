@@ -1,5 +1,5 @@
 
-# Welcome to `myers-diff`
+# Welcome to `myers-diff` [![Hackage](https://img.shields.io/hackage/v/myers-diff.svg)](https://hackage.haskell.org/package/myers-diff) ![myers-diff](https://github.com/codedownio/myers-diff/workflows/ci/badge.svg)
 
 This is a fast Haskell implementation of the Myers text diff algorithm[^1]. It is heavily inspired by the Python version in [this post](https://blog.robertelder.org/diff-algorithm/), and should have the same `O(min(len(a), len(b)))` space complexity. (By contrast, the [Diff](https://hackage.haskell.org/package/Diff) package advertises `O(ab)` space complexity.) The implementation uses unboxed mutable vectors for performance.
 
