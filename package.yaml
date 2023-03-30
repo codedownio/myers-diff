@@ -121,7 +121,7 @@ tests:
     when:
     - condition: flag(uni_myers)
       source-dirs: test-uni-myers
-    - condition: flag(uni_myers)
+    - condition: flag(diff_myers)
       source-dirs: test-diff-myers
 
 benchmarks:

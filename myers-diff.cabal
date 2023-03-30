@@ -183,7 +183,7 @@ test-suite myers-diff-test
         Spec.UniMyersSpec
     hs-source-dirs:
         test-uni-myers
-  if flag(uni_myers)
+  if flag(diff_myers)
     other-modules:
         Spec.DiffMyersSpec
     hs-source-dirs:
