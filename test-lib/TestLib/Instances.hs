@@ -3,7 +3,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module TestLib.Instances where
+module TestLib.Instances () where
 
 import Control.DeepSeq
 import Data.Diff.Types
