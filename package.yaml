@@ -4,6 +4,7 @@ github:              "codedownio/myers-diff"
 author:              "Tom McLaughlin"
 maintainer:          "tom@codedown.io"
 copyright:           "2023 Tom McLaughlin"
+license:             BSD3
 
 extra-source-files:
 - README.md

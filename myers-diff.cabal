@@ -12,6 +12,7 @@ bug-reports:    https://github.com/codedownio/myers-diff/issues
 author:         Tom McLaughlin
 maintainer:     tom@codedown.io
 copyright:      2023 Tom McLaughlin
+license:        BSD3
 build-type:     Simple
 extra-source-files:
     README.md
