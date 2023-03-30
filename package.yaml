@@ -80,6 +80,21 @@ library:
     - Diff
 
 # TODO: add executable and try profiling it
+executables:
+  myers-diff:
+    main: Main.hs
+    source-dirs:
+    - app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O2
+    dependencies:
+    - myers-diff
+    - string-interpolate
+    - text-rope
+    - QuickCheck
 
 tests:
   myers-diff-test:
@@ -89,6 +104,7 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -O2
     dependencies:
     - myers-diff
     - sandwich
@@ -104,18 +120,35 @@ tests:
       source-dirs: test-diff-myers
 
 benchmarks:
-  myers-diff-benchmarks:
+  myers-diff-criterion:
     main:                Main.hs
-    source-dirs:         bench
+    source-dirs:
+    - bench-criterion
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -O2
     dependencies:
     - array
     - criterion
     - deepseq
     - myers-diff
     - random
+    - string-interpolate
+
+  myers-diff-weigh:
+    main:                Main.hs
+    source-dirs:
+    - bench-weigh
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O2
+    dependencies:
+    - array
+    - deepseq
+    - myers-diff
     - string-interpolate
     - weigh

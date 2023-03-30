@@ -84,6 +84,45 @@ library
     build-depends:
         Diff
 
+executable myers-diff
+  main-is: Main.hs
+  other-modules:
+      Paths_myers_diff
+  hs-source-dirs:
+      app
+  default-extensions:
+      OverloadedStrings
+      QuasiQuotes
+      NamedFieldPuns
+      RecordWildCards
+      ScopedTypeVariables
+      FlexibleContexts
+      FlexibleInstances
+      LambdaCase
+      ConstraintKinds
+      ViewPatterns
+      TupleSections
+      MultiWayIf
+      NumericUnderscores
+      MultiParamTypeClasses
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:
+      QuickCheck
+    , base >=4.7 && <5
+    , containers
+    , exceptions
+    , myers-diff
+    , primitive
+    , string-interpolate
+    , text
+    , text-rope
+    , vector
+  default-language: Haskell2010
+  if flag(uni_myers)
+    cpp-options: -DUNI_MYERS
+  if flag(diff_myers)
+    cpp-options: -DDIFF_MYERS
+
 test-suite myers-diff-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
@@ -110,7 +149,7 @@ test-suite myers-diff-test
       MultiWayIf
       NumericUnderscores
       MultiParamTypeClasses
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       QuickCheck
     , base >=4.7 && <5
@@ -141,13 +180,13 @@ test-suite myers-diff-test
     hs-source-dirs:
         test-diff-myers
 
-benchmark myers-diff-benchmarks
+benchmark myers-diff-criterion
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
       Paths_myers_diff
   hs-source-dirs:
-      bench
+      bench-criterion
   default-extensions:
       OverloadedStrings
       QuasiQuotes
@@ -163,7 +202,7 @@ benchmark myers-diff-benchmarks
       MultiWayIf
       NumericUnderscores
       MultiParamTypeClasses
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       array
     , base >=4.7 && <5
@@ -174,6 +213,46 @@ benchmark myers-diff-benchmarks
     , myers-diff
     , primitive
     , random
+    , string-interpolate
+    , text
+    , vector
+  default-language: Haskell2010
+  if flag(uni_myers)
+    cpp-options: -DUNI_MYERS
+  if flag(diff_myers)
+    cpp-options: -DDIFF_MYERS
+
+benchmark myers-diff-weigh
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_myers_diff
+  hs-source-dirs:
+      bench-weigh
+  default-extensions:
+      OverloadedStrings
+      QuasiQuotes
+      NamedFieldPuns
+      RecordWildCards
+      ScopedTypeVariables
+      FlexibleContexts
+      FlexibleInstances
+      LambdaCase
+      ConstraintKinds
+      ViewPatterns
+      TupleSections
+      MultiWayIf
+      NumericUnderscores
+      MultiParamTypeClasses
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , containers
+    , deepseq
+    , exceptions
+    , myers-diff
+    , primitive
     , string-interpolate
     , text
     , vector

@@ -7,9 +7,9 @@
 module Main (main) where
 
 import Control.DeepSeq
-import Criterion
-import Criterion.Main
 import Data.Diff.Types
+import qualified Data.Diff.VectorMyers as VM
+import Data.String
 import Data.String.Interpolate
 import Data.Text as T
 import Data.Text.Encoding as T
@@ -22,8 +22,6 @@ import Weigh
 import qualified Data.Diff.DiffMyersShim as DM
 #endif
 
-import qualified Data.Diff.VectorMyers as VM
-import Data.String
 
 deriving instance Generic Position
 deriving instance NFData Position
@@ -33,20 +31,6 @@ deriving instance NFData Range
 
 deriving instance Generic ChangeEvent
 deriving instance NFData ChangeEvent
-
--- getPair :: IO (String, String, Text, Text)
--- getPair = do
---   putStrLn "Generating pair"
---   return (T.unpack file1, T.unpack file2, file1, file2)
-
--- main :: IO ()
--- main = defaultMain [
---   env getPair $ \(~(initial, final, initialText, finalText)) ->
---     bgroup "Simple" [
---       bench "Diff" $ nf (\(x, y) -> DM.diffDiff x y) (initial, final)
---       , bench "Vector" $ nf (\(x, y) -> VM.diffTextsToChangeEvents x y) (initialText, finalText)
---     ]
---   ]
 
 main :: IO ()
 main = mainWith $ do
