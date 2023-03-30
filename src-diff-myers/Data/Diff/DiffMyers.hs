@@ -1,6 +1,6 @@
 
-module Data.Diff.DiffMyersShim (
-  diffDiff
+module Data.Diff.DiffMyers (
+  diff
   ) where
 
 import qualified Data.Algorithm.Diff as DD
@@ -45,5 +45,5 @@ utilDiffToLspDiff elems = go [] 0 0 elems
 
     countNewlines = L.foldl' (\total c -> if c == '\n' then total + 1 else total) 0
 
-diffDiff :: String -> String -> [ChangeEvent]
-diffDiff s1 s2 = utilDiffToLspDiff (DD.getGroupedDiff s1 s2)
+diff :: String -> String -> [ChangeEvent]
+diff s1 s2 = utilDiffToLspDiff (DD.getGroupedDiff s1 s2)

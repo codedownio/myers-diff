@@ -13,14 +13,14 @@ import TestLib.Instances ()
 import Weigh
 
 #ifdef DIFF_MYERS
-import qualified Data.Diff.DiffMyersShim as DM
+import qualified Data.Diff.DiffMyers as DM
 #endif
 
 
 main :: IO ()
 main = mainWith $ do
 #ifdef DIFF_MYERS
-  func "Diff" (\(x, y) -> DM.diffDiff x y) (T.unpack file1, T.unpack file2)
+  func "Diff" (\(x, y) -> DM.diff x y) (T.unpack file1, T.unpack file2)
 #endif
 
   func "Vector" (\(x, y) -> VM.diffTextsToChangeEvents x y) (file1, file2)

@@ -10,7 +10,7 @@ import Data.Text as T
 import TestLib.Instances ()
 
 #ifdef DIFF_MYERS
-import qualified Data.Diff.DiffMyersShim as DM
+import qualified Data.Diff.DiffMyers as DM
 #endif
 
 
@@ -29,7 +29,7 @@ main = defaultMain [
       , bench "Vector to ChangeEvents (consolidated)" $ nf (\(x, y) -> VM.diffTextsToChangeEventsConsolidate x y) (initialText, finalText)
 
 #ifdef DIFF_MYERS
-      , bench "Diff" $ nf (\(x, y) -> DM.diffDiff x y) (initial, final)
+      , bench "Diff" $ nf (\(x, y) -> DM.diff x y) (initial, final)
 #endif
     ]
   ]
