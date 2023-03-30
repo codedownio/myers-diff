@@ -37,7 +37,7 @@ spec = describe "VectorMyers" $ do
     checkDiff "" "ab" [mkInsert (0, 0) (0, 0) "ab"]
     checkDiff "x" "xab" [mkInsert (0, 1) (0, 1) "a", mkInsert (0, 2) (0, 2) "b"]
 
-  describe "QuickCheck" $ introduceQuickCheck $ modifyMaxSuccess (const 100n00) $ do
+  describe "QuickCheck" $ introduceQuickCheck $ modifyMaxSuccess (const 10000) $ do
     describe "Arbitrary text" $ do
       prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to
       prop "Multiple changes" $ \(MultiInsertOrDelete (from, to)) -> verifyDiff from to
