@@ -71,14 +71,13 @@ library
   if flag(uni_myers)
     exposed-modules:
         Data.Diff.UniMyers
-        Data.Diff.UniMyersShim
     hs-source-dirs:
         src-uni-myers
     build-depends:
         array
   if flag(diff_myers)
     exposed-modules:
-        Data.Diff.DiffMyersShim
+        Data.Diff.DiffMyers
     hs-source-dirs:
         src-diff-myers
     build-depends:

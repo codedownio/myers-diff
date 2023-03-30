@@ -70,13 +70,12 @@ library:
     source-dirs: src-uni-myers
     exposed-modules:
     - Data.Diff.UniMyers
-    - Data.Diff.UniMyersShim
     dependencies:
     - array
   - condition: flag(diff_myers)
     source-dirs: src-diff-myers
     exposed-modules:
-    - Data.Diff.DiffMyersShim
+    - Data.Diff.DiffMyers
     dependencies:
     - Diff
 

@@ -31,13 +31,19 @@ module Data.Diff.UniMyers (
    diff,
    diff2,
    DiffElement(..),
+
+   utilDiff,
+   utilDiffToLspDiff
    ) where
 
 
-import Data.Array
-
 import Control.Monad.ST
-import Data.Array.ST
+import Data.Array hiding (index)
+import Data.Array.ST hiding (index)
+import Data.Diff.Types
+import Data.Function
+import qualified Data.List as L
+import qualified Data.Text as T
 
 -- import Util.ExtendedPrelude
 
@@ -317,3 +323,45 @@ splitToElem fn = sTC
             fmap
                (\ (xs1,xs2) -> (x:xs1,xs2))
                (sTC xs)
+
+-- * Shim
+
+
+utilDiffToLspDiff :: [DiffElement Char] -> [ChangeEvent]
+utilDiffToLspDiff elems = go [] 0 0 elems
+  where
+    go events curLine curChar ((InBoth chars):xs) = go events curLine' curChar' xs
+      where
+        curLine' = curLine + countNewlines chars
+        curChar' = if hasNewline chars then lengthOfLastLine chars else curChar + (L.length chars)
+
+    go events curLine curChar ((InFirst chars):xs) = go ((ChangeEvent (Range startPos endPos) ""):events) curLine' curChar' xs
+      where
+        startPos = Position curLine curChar
+        endPos = Position (curLine + countNewlines chars) (if hasNewline chars then lengthOfLastLine chars else curChar + (L.length chars))
+
+        curLine' = curLine
+        curChar' = curChar
+
+    go events curLine curChar ((InSecond chars):xs) = go ((ChangeEvent (Range startPos endPos) (T.pack chars)):events) curLine' curChar' xs
+      where
+        startPos = Position curLine curChar
+        endPos = startPos
+
+        curLine' = curLine + countNewlines chars
+        curChar' = if hasNewline chars then lengthOfLastLine chars else curChar + (L.length chars)
+
+    go events _curLine _curChar [] = reverse events
+
+    hasNewline = any (== '\n')
+
+    lengthOfLastLine chars = chars
+                           & T.pack
+                           & T.splitOn "\n"
+                           & last
+                           & T.length
+
+    countNewlines = L.foldl' (\total c -> if c == '\n' then total + 1 else total) 0
+
+utilDiff :: String -> String -> [ChangeEvent]
+utilDiff s1 s2 = utilDiffToLspDiff (diff s1 s2)

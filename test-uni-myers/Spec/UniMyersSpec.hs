@@ -3,7 +3,7 @@
 module Spec.UniMyersSpec (spec) where
 
 import Data.Diff.Types
-import Data.Diff.UniMyersShim
+import Data.Diff.UniMyers
 import Data.Text as T
 import Test.Sandwich
 import Test.Sandwich.QuickCheck
