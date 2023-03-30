@@ -10,7 +10,7 @@ extra-source-files:
 - README.md
 - CHANGELOG.md
 
-description:         Please see the README on GitHub at <https://github.com/githubuser/myers-diff#readme>
+description:         Please see the README on GitHub at <https://github.com/codedownio/myers-diff#readme>
 
 dependencies:
 - base >= 4.7 && < 5
