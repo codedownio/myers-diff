@@ -79,24 +79,24 @@ library:
     dependencies:
     - Diff
 
-executables:
-  myers-diff:
-    main: Main.hs
-    source-dirs:
-    - app
-    - test-lib
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    - -O2
-    dependencies:
-    - deepseq
-    - myers-diff
-    - string-interpolate
-    - text-rope
-    - QuickCheck
-    - quickcheck-instances
+# executables:
+#   myers-diff:
+#     main: Main.hs
+#     source-dirs:
+#     - app
+#     - test-lib
+#     ghc-options:
+#     - -threaded
+#     - -rtsopts
+#     - -with-rtsopts=-N
+#     - -O2
+#     dependencies:
+#     - deepseq
+#     - myers-diff
+#     - string-interpolate
+#     - text-rope
+#     - QuickCheck
+#     - quickcheck-instances
 
 tests:
   myers-diff-test:
