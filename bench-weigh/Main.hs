@@ -3,11 +3,9 @@
 module Main (main) where
 
 import qualified Data.Diff.Myers as VM
-import Data.String
 import Data.String.Interpolate
 import Data.Text as T
 import Data.Text.Encoding as T
-import qualified Data.Vector.Unboxed as VU
 import Data.Vector.Unboxed.Mutable as VUM
 import TestLib.Instances ()
 import Weigh
@@ -25,8 +23,8 @@ main = mainWith $ do
 
   func "Vector" (\(x, y) -> VM.diffTextsToChangeEvents x y) (file1, file2)
 
-  -- value "file1 vector" (force (VU.generate (T.length file1) (\i -> T.index file1 i)))
-  -- value "file2 vector" (force (VU.generate (T.length file2) (\i -> T.index file2 i)))
+  -- value "file1 vector" (force (VU.fromList (T.unpack file1)))
+  -- value "file2 vector" (force (VU.fromList (T.unpack file2)))
 
   -- value "file1" file1
   -- value "file2" file2
@@ -35,7 +33,6 @@ main = mainWith $ do
   value "file2 bytes" (T.encodeUtf8 file2)
 
   action "file2 vector" (VUM.generate (T.length file2) (\i -> T.index file2 i))
-
 
 
 file1 :: Text

@@ -53,9 +53,8 @@ import Prelude hiding (read)
 -- | Diff 'Text's to produce an edit script.
 diffTexts :: Text -> Text -> Seq Edit
 diffTexts left right = runST $ do
-  -- This is faster than VU.fromList (T.unpack left), right?
-  let l = VU.generate (T.length left) (\i -> T.index left i)
-  let r = VU.generate (T.length right) (\i -> T.index right i)
+  let l = VU.fromList (T.unpack left)
+  let r = VU.fromList (T.unpack right)
   diff l r
 
 -- | Diff 'Text's to produce LSP-style change events.
@@ -70,8 +69,8 @@ diffTextsToChangeEventsConsolidate = diffTextsToChangeEvents' consolidateEditScr
 diffTextsToChangeEvents' :: (Seq Edit -> Seq Edit) -> Text -> Text -> [ChangeEvent]
 diffTextsToChangeEvents' consolidateFn left right = F.toList $ editScriptToChangeEvents l r (consolidateFn (runST (diff l r)))
   where
-    l = VU.generate (T.length left) (\i -> T.index left i)
-    r = VU.generate (T.length right) (\i -> T.index right i)
+    l = VU.fromList (T.unpack left)
+    r = VU.fromList (T.unpack right)
 
 -- | To use in benchmarking against other libraries that use String.
 diffStrings :: String -> String -> Seq Edit

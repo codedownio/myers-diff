@@ -2,8 +2,8 @@
 
 module Bench.VectorIO where
 
-import Data.Diff.Types
 import Data.Diff.Myers
+import Data.Diff.Types
 import qualified Data.Foldable as F
 import Data.Sequence
 import Data.Text as T
@@ -15,9 +15,8 @@ import Data.Vector.Unboxed as VU
 -- | Diff 'Text's to produce an edit script.
 diffTextsIO :: Text -> Text -> IO (Seq Edit)
 diffTextsIO left right = do
-  -- This is faster than VU.fromList (T.unpack left), right?
-  let l = VU.generate (T.length left) (\i -> T.index left i)
-  let r = VU.generate (T.length right) (\i -> T.index right i)
+  let l = VU.fromList (T.unpack left)
+  let r = VU.fromList (T.unpack right)
   diff l r
 
 -- | Diff 'Text's to produce LSP-style change events.
@@ -31,8 +30,8 @@ diffTextsToChangeEventsIOConsolidate = diffTextsToChangeEventsIO' consolidateEdi
 diffTextsToChangeEventsIO' :: (Seq Edit -> Seq Edit) -> Text -> Text -> IO [ChangeEvent]
 diffTextsToChangeEventsIO' consolidateFn left right = do
   -- This is faster than VU.fromList (T.unpack left), right?
-  let l = VU.generate (T.length left) (\i -> T.index left i)
-  let r = VU.generate (T.length right) (\i -> T.index right i)
+  let l = VU.fromList (T.unpack left)
+  let r = VU.fromList (T.unpack right)
   edits <- diff l r
   return $ F.toList $ editScriptToChangeEvents l r (consolidateFn edits)
 
