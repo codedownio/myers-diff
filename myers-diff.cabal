@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -22,7 +22,7 @@ source-repository head
   type: git
   location: https://github.com/codedownio/myers-diff
 
-flag diff_myers
+flag diff
   description: Include the diff implementation from the "Diff" package
   manual: True
   default: False
@@ -66,8 +66,8 @@ library
   default-language: Haskell2010
   if flag(uni_myers)
     cpp-options: -DUNI_MYERS
-  if flag(diff_myers)
-    cpp-options: -DDIFF_MYERS
+  if flag(diff)
+    cpp-options: -DDIFF
   if flag(uni_myers)
     exposed-modules:
         Data.Diff.UniMyers
@@ -75,11 +75,11 @@ library
         src-uni-myers
     build-depends:
         array
-  if flag(diff_myers)
+  if flag(diff)
     exposed-modules:
-        Data.Diff.DiffMyers
+        Data.Diff.Diff
     hs-source-dirs:
-        src-diff-myers
+        src-diff
     build-depends:
         Diff
 
@@ -130,18 +130,18 @@ test-suite myers-diff-test
   default-language: Haskell2010
   if flag(uni_myers)
     cpp-options: -DUNI_MYERS
-  if flag(diff_myers)
-    cpp-options: -DDIFF_MYERS
+  if flag(diff)
+    cpp-options: -DDIFF
   if flag(uni_myers)
     other-modules:
         Spec.UniMyersSpec
     hs-source-dirs:
         test-uni-myers
-  if flag(diff_myers)
+  if flag(diff)
     other-modules:
         Spec.DiffMyersSpec
     hs-source-dirs:
-        test-diff-myers
+        test-diff
 
 benchmark myers-diff-criterion
   type: exitcode-stdio-1.0
@@ -191,8 +191,8 @@ benchmark myers-diff-criterion
   default-language: Haskell2010
   if flag(uni_myers)
     cpp-options: -DUNI_MYERS
-  if flag(diff_myers)
-    cpp-options: -DDIFF_MYERS
+  if flag(diff)
+    cpp-options: -DDIFF
 
 benchmark myers-diff-weigh
   type: exitcode-stdio-1.0
@@ -240,5 +240,5 @@ benchmark myers-diff-weigh
   default-language: Haskell2010
   if flag(uni_myers)
     cpp-options: -DUNI_MYERS
-  if flag(diff_myers)
-    cpp-options: -DDIFF_MYERS
+  if flag(diff)
+    cpp-options: -DDIFF

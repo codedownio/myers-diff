@@ -10,18 +10,18 @@ import Data.Vector.Unboxed.Mutable as VUM
 import TestLib.Instances ()
 import Weigh
 
-#ifdef DIFF_MYERS
-import qualified Data.Diff.DiffMyers as DM
+#ifdef DIFF
+import qualified Data.Diff.Diff as DD
 #endif
 
 
 main :: IO ()
 main = mainWith $ do
-#ifdef DIFF_MYERS
-  func "Diff" (\(x, y) -> DM.diff x y) (T.unpack file1, T.unpack file2)
+#ifdef DIFF
+  func "Diff" (uncurry DD.diff) (T.unpack file1, T.unpack file2)
 #endif
 
-  func "Vector" (\(x, y) -> VM.diffTextsToChangeEvents x y) (file1, file2)
+  func "myers-diff" (uncurry VM.diffTexts) (file1, file2)
 
   -- value "file1 vector" (force (VU.fromList (T.unpack file1)))
   -- value "file2 vector" (force (VU.fromList (T.unpack file2)))
@@ -29,10 +29,10 @@ main = mainWith $ do
   -- value "file1" file1
   -- value "file2" file2
 
-  value "file2 string" (T.unpack file2)
-  value "file2 bytes" (T.encodeUtf8 file2)
+  -- value "file2 string" (T.unpack file2)
+  -- value "file2 bytes" (T.encodeUtf8 file2)
 
-  action "file2 vector" (VUM.generate (T.length file2) (\i -> T.index file2 i))
+  -- action "file2 vector" (VUM.generate (T.length file2) (\i -> T.index file2 i))
 
 
 file1 :: Text

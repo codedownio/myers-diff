@@ -1,5 +1,5 @@
 
-module Data.Diff.DiffMyers (
+module Data.Diff.Diff (
   diff
   ) where
 

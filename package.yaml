@@ -25,7 +25,7 @@ flags:
     manual: true
     default: false
     description: Use the diff implementation from the "uni-util" package (buggy). This causes LGPL code to be included.
-  diff_myers:
+  diff:
     manual: true
     default: false
     description: Include the diff implementation from the "Diff" package
@@ -33,8 +33,8 @@ flags:
 when:
 - condition: flag(uni_myers)
   cpp-options: -DUNI_MYERS
-- condition: flag(diff_myers)
-  cpp-options: -DDIFF_MYERS
+- condition: flag(diff)
+  cpp-options: -DDIFF
 
 default-extensions:
 - OverloadedStrings
@@ -72,10 +72,10 @@ library:
     - Data.Diff.UniMyers
     dependencies:
     - array
-  - condition: flag(diff_myers)
-    source-dirs: src-diff-myers
+  - condition: flag(diff)
+    source-dirs: src-diff
     exposed-modules:
-    - Data.Diff.DiffMyers
+    - Data.Diff.Diff
     dependencies:
     - Diff
 
@@ -121,8 +121,8 @@ tests:
     when:
     - condition: flag(uni_myers)
       source-dirs: test-uni-myers
-    - condition: flag(diff_myers)
-      source-dirs: test-diff-myers
+    - condition: flag(diff)
+      source-dirs: test-diff
 
 benchmarks:
   myers-diff-criterion:

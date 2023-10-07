@@ -7,70 +7,33 @@ import Criterion.Main
 import qualified Data.Diff.Myers as VM
 import Data.String.Interpolate
 import Data.Text as T
+import Test.QuickCheck
+import TestLib.Generators (arbitraryDocInsert)
 import TestLib.Instances ()
 
-#ifdef DIFF_MYERS
-import qualified Data.Diff.DiffMyers as DM
+#ifdef DIFF
+import qualified Data.Diff.Diff as DD
 #endif
 
 
 getPair :: IO (String, String, Text, Text)
 getPair = do
   putStrLn "Generating pair"
-  return (T.unpack file1, T.unpack file2, file1, file2)
+  (t1, t2) <- generate arbitraryDocInsert
+  putStrLn [i|#{t1} vs #{t2}|]
+  return (T.unpack t1, T.unpack t2, t1, t2)
 
 main :: IO ()
 main = defaultMain [
   env getPair $ \(~(initial, final, initialText, finalText)) ->
-    bgroup "Simple" [
-      bench "Vector to edit script" $ nf (\(x, y) -> VM.diffTexts x y) (initialText, finalText)
-      , bench "Vector to edit script (consolidated)" $ nf (\(x, y) -> VM.consolidateEditScript $ VM.diffTexts x y) (initialText, finalText)
-      , bench "Vector to ChangeEvent" $ nf (\(x, y) -> VM.diffTextsToChangeEvents x y) (initialText, finalText)
-      , bench "Vector to ChangeEvents (consolidated)" $ nf (\(x, y) -> VM.diffTextsToChangeEventsConsolidate x y) (initialText, finalText)
+    bgroup "Diff" [
+      bench "myers-diff" $ nf (uncurry VM.diffTexts) (initialText, finalText)
+      -- , bench "Vector to edit script (consolidated)" $ nf (\(x, y) -> VM.consolidateEditScript $ VM.diffTexts x y) (initialText, finalText)
+      -- , bench "Vector to ChangeEvent" $ nf (\(x, y) -> VM.diffTextsToChangeEvents x y) (initialText, finalText)
+      -- , bench "Vector to ChangeEvents (consolidated)" $ nf (\(x, y) -> VM.diffTextsToChangeEventsConsolidate x y) (initialText, finalText)
 
-#ifdef DIFF_MYERS
-      , bench "Diff" $ nf (\(x, y) -> DM.diff x y) (initial, final)
+#ifdef DIFF
+      , bench "Diff" $ nf (\(x, y) -> DD.diff x y) (initial, final)
 #endif
     ]
   ]
-
-
-file1 :: Text
-file1 =
-  [__i|foo = 42
-       :t foo
-
-       homophones <- readFile "homophones.list"
-
-       putStrLn "HI"
-
-       abc
-
-       import Data.Aeson as A
-
-       -- | Here's a nice comment on bar
-       bar :: IO ()
-       bar = do
-         putStrLn "hello"
-         putStrLn "world"
-      |]
-
-file2 :: Text
-file2 =
-  [__i|foo = 42
-       :t foo
-
-       homophones <- readFile "homophones.list"
-
-       putStrLn "HI"
-
-       a
-
-       import Data.Aeson as A
-
-       -- | Here's a nice comment on bar
-       bar :: IO ()
-       bar = do
-         putStrLn "hello"
-         putStrLn "world"
-      |]
