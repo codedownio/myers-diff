@@ -37,6 +37,8 @@ main = do
   deleteSamples100000 <- getPairSingleDelete 100 100000
 
   mainWith $ do
+    setFormat Markdown
+
     wgroup [i|Single insert (100 samples each)|] $ do
       testFunc 10 insertSamples10
       testFunc 100 insertSamples100

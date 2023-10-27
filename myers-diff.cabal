@@ -118,6 +118,7 @@ test-suite myers-diff-test
       QuickCheck
     , base >=4.7 && <5
     , containers
+    , criterion
     , deepseq
     , exceptions
     , myers-diff
@@ -284,6 +285,7 @@ benchmark myers-diff-weigh
     , array
     , base >=4.7 && <5
     , containers
+    , criterion
     , deepseq
     , exceptions
     , myers-diff

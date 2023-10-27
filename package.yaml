@@ -110,6 +110,7 @@ tests:
     - -with-rtsopts=-N
     - -O2
     dependencies:
+    - criterion
     - deepseq
     - myers-diff
     - sandwich
@@ -179,6 +180,7 @@ benchmarks:
     - -O2
     dependencies:
     - array
+    - criterion
     - deepseq
     - myers-diff
     - QuickCheck
