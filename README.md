@@ -19,6 +19,7 @@ The [Diff](https://hackage.haskell.org/package/Diff) package also implements the
 You can generate all the benchmarks by running `./run_all_benchmarks.sh`. Full results can be found in `./benchmark_results`. All benchmarks were run on an Intel i9-13900K.
 
 TL;DR:
+* These benchmarks focus on inputs of different sizes, where a single ~30 character region is either inserted or deleted.
 * `myers-diff` is faster by around 2.5x, and the advantage grows with larger inputs (around 100k characters).
 * `myers-diff` is more space-efficient by 5x for tiny inputs, shrinking to 1.5x for 10k character inputs and 1.3x for 100k character inputs.
 
