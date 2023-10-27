@@ -81,6 +81,12 @@ arbitraryLine = oneof [pure "", arbitrary]
 arbitraryDoc :: Gen Text
 arbitraryDoc = T.intercalate "\n" <$> listOf arbitraryLine
 
+arbitraryAlphanumericString :: Gen Text
+arbitraryAlphanumericString = T.pack <$> listOf alphaNumericChar
+
+alphaNumericChar :: Gen Char
+alphaNumericChar = elements (['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ [' '])
+
 file1 :: Text
 file1 =
   [__i|foo = 42
