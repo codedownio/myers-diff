@@ -125,10 +125,31 @@ tests:
       source-dirs: test-diff
 
 benchmarks:
-  myers-diff-criterion:
+  myers-diff-criterion-small-inserts:
     main:                Main.hs
     source-dirs:
-    - bench-criterion
+    - bench-criterion-small-inserts
+    - test-lib
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O2
+    dependencies:
+    - array
+    - criterion
+    - deepseq
+    - myers-diff
+    - QuickCheck
+    - quickcheck-instances
+    - random
+    - string-interpolate
+    - text-rope
+
+  myers-diff-criterion-small-deletes:
+    main:                Main.hs
+    source-dirs:
+    - bench-criterion-small-deletes
     - test-lib
     ghc-options:
     - -threaded

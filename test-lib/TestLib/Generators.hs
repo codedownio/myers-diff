@@ -5,6 +5,7 @@ module TestLib.Generators where
 import Data.Function
 import Data.String.Interpolate
 import Data.Text as T
+import Data.Word
 import Test.QuickCheck as Q
 import Test.QuickCheck.Instances.Text ()
 
@@ -41,6 +42,7 @@ arbitraryChangesSized initial = sized $ \n -> flip fix (n, initial) $ \loop -> \
 
 -- * Inserts and deletes
 
+-- | Arbitrarily insert up to size parameter characters
 arbitraryDocInsert :: Gen (Text, Text)
 arbitraryDocInsert = arbitraryDoc >>= (\initial -> (initial, ) <$> arbitraryInsertOn initial)
 
@@ -63,10 +65,14 @@ arbitraryDelete = arbitrary >>= (\initial -> (initial, ) <$> arbitraryDeleteOn i
 arbitraryDocDelete :: Gen (Text, Text)
 arbitraryDocDelete = arbitraryDoc >>= (\initial -> (initial, ) <$> arbitraryDeleteOn initial)
 
+-- | Arbitrarily delete up to size parameter characters
 arbitraryDeleteOn :: Text -> Gen Text
 arbitraryDeleteOn initial = do
+  size <- getSize
+  amountToDelete :: Int <- chooseInt (1, size)
+
   pos1 <- chooseInt (0, max 0 (T.length initial - 1))
-  pos2 <- chooseInt (pos1, T.length initial)
+  pos2 <- chooseInt (pos1, min (pos1 + fromIntegral amountToDelete) (T.length initial))
 
   let (x, y) = T.splitAt pos1 initial
   let (_, z) = T.splitAt (pos2 - pos1) y

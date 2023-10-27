@@ -1,6 +1,9 @@
+{-# LANGUAGE CPP #-}
 
 module TestLib.Benchmarking (
-  getPairSingleInsert
+  testGroup
+
+  , getPairSingleInsert
   , getPairSingleDelete
 
   , getPairWithEdit
@@ -9,11 +12,33 @@ module TestLib.Benchmarking (
   ) where
 
 import Control.Monad
+import Criterion
+import qualified Data.Diff.Myers as VM
+import qualified Data.List as L
+import Data.String.Interpolate
 import Data.Text as T
 import Test.QuickCheck
 import TestLib.Generators
 import TestLib.Instances ()
 
+#ifdef DIFF
+import qualified Data.Diff.Diff as DD
+#endif
+
+
+-- * Test group
+
+testGroup :: PairFn -> Int -> Int -> Benchmark
+testGroup getPair numSamples inputSize =
+  env (getPair numSamples inputSize) $ \samples -> do
+    bgroup [i|#{inputSize} characters|] [
+      bench "myers-diff" $ nf (L.map (\(_, _, initialText, finalText) -> (VM.diffTexts initialText finalText))) samples
+#ifdef DIFF
+      , bench "Diff" $ nf (L.map (\(initialString, finalString, _, _) -> (DD.diff initialString finalString))) samples
+#endif
+      ]
+
+-- * Pair generation
 
 type PairFn = Int -> Int -> IO [(String, String, Text, Text)]
 

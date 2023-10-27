@@ -93,6 +93,7 @@ test-suite myers-diff-test
       TestLib.Generators
       TestLib.Instances
       TestLib.Util
+      TestLib.VectorIO
       Paths_myers_diff
   hs-source-dirs:
       test
@@ -144,19 +145,71 @@ test-suite myers-diff-test
     hs-source-dirs:
         test-diff
 
-benchmark myers-diff-criterion
+benchmark myers-diff-criterion-small-deletes
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      Bench.VectorIO
       TestLib.Apply
       TestLib.Benchmarking
       TestLib.Generators
       TestLib.Instances
       TestLib.Util
+      TestLib.VectorIO
       Paths_myers_diff
   hs-source-dirs:
-      bench-criterion
+      bench-criterion-small-deletes
+      test-lib
+  default-extensions:
+      OverloadedStrings
+      QuasiQuotes
+      NamedFieldPuns
+      RecordWildCards
+      ScopedTypeVariables
+      FlexibleContexts
+      FlexibleInstances
+      LambdaCase
+      ConstraintKinds
+      ViewPatterns
+      TupleSections
+      MultiWayIf
+      NumericUnderscores
+      MultiParamTypeClasses
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:
+      QuickCheck
+    , array
+    , base >=4.7 && <5
+    , containers
+    , criterion
+    , deepseq
+    , exceptions
+    , myers-diff
+    , primitive
+    , quickcheck-instances
+    , random
+    , string-interpolate
+    , text
+    , text-rope
+    , vector
+  default-language: Haskell2010
+  if flag(uni_myers)
+    cpp-options: -DUNI_MYERS
+  if flag(diff)
+    cpp-options: -DDIFF
+
+benchmark myers-diff-criterion-small-inserts
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      TestLib.Apply
+      TestLib.Benchmarking
+      TestLib.Generators
+      TestLib.Instances
+      TestLib.Util
+      TestLib.VectorIO
+      Paths_myers_diff
+  hs-source-dirs:
+      bench-criterion-small-inserts
       test-lib
   default-extensions:
       OverloadedStrings
@@ -205,6 +258,7 @@ benchmark myers-diff-weigh
       TestLib.Generators
       TestLib.Instances
       TestLib.Util
+      TestLib.VectorIO
       Paths_myers_diff
   hs-source-dirs:
       bench-weigh

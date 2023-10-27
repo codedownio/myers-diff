@@ -15,8 +15,8 @@ import qualified Data.Diff.Diff as DD
 #endif
 
 
-testFunc :: [(String, String, Text, Text)] -> Weigh ()
-testFunc samples = do
+testFunc :: Int -> [(String, String, Text, Text)] -> Weigh ()
+testFunc inputSize samples = wgroup [i|#{inputSize} characters|] $ do
   func' "myers-diff" (L.map (\(_, _, initialText, finalText) -> (VM.diffTexts initialText finalText))) samples
 #ifdef DIFF
   func' "Diff" (L.map (\(initialString, finalString, _, _) -> (DD.diff initialString finalString))) samples
@@ -24,24 +24,29 @@ testFunc samples = do
 
 main :: IO ()
 main = do
-  samples10 <- getPairSingleInsert 100 10
-  samples100 <- getPairSingleInsert 100 100
-  samples1000 <- getPairSingleInsert 100 1000
-  samples10000 <- getPairSingleInsert 100 10000
-  samples100000 <- getPairSingleInsert 100 100000
+  insertSamples10 <- getPairSingleInsert 100 10
+  insertSamples100 <- getPairSingleInsert 100 100
+  insertSamples1000 <- getPairSingleInsert 100 1000
+  insertSamples10000 <- getPairSingleInsert 100 10000
+  insertSamples100000 <- getPairSingleInsert 100 100000
+
+  deleteSamples10 <- getPairSingleDelete 100 10
+  deleteSamples100 <- getPairSingleDelete 100 100
+  deleteSamples1000 <- getPairSingleDelete 100 1000
+  deleteSamples10000 <- getPairSingleDelete 100 10000
+  deleteSamples100000 <- getPairSingleDelete 100 100000
 
   mainWith $ do
     wgroup [i|Single insert (100 samples each)|] $ do
-      testFunc samples10
-      testFunc samples100
-      testFunc samples1000
-      testFunc samples10000
-      testFunc samples100000
+      testFunc 10 insertSamples10
+      testFunc 100 insertSamples100
+      testFunc 1000 insertSamples1000
+      testFunc 10000 insertSamples10000
+      testFunc 100000 insertSamples100000
 
-    -- , wgroup [i|Single delete (100 samples each)|] [
-    --            testFunc getPairSingleDelete 100 10
-    --            , testFunc getPairSingleDelete 100 100
-    --            , testFunc getPairSingleDelete 100 1000
-    --            , testFunc getPairSingleDelete 100 10000
-    --            -- , testFunc getPairSingleDelete 100 100000
-    --            ]
+    wgroup [i|Single delete (100 samples each)|] $ do
+      testFunc 10 deleteSamples10
+      testFunc 100 deleteSamples100
+      testFunc 1000 deleteSamples1000
+      testFunc 10000 deleteSamples10000
+      testFunc 100000 deleteSamples100000

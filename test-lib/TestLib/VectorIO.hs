@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-missing-export-lists #-}
 
-module Bench.VectorIO where
+module TestLib.VectorIO where
 
 import Data.Diff.Myers
 import Data.Diff.Types
