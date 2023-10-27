@@ -9,7 +9,7 @@ import TestLib.Benchmarking
 
 main :: IO ()
 main = defaultMain [
-  bgroup [i|Delete <= 30 chars (100 samples each)|] [
+  bgroup [i|Small delete|] [
              testGroup getPairSingleDelete 100 10
              , testGroup getPairSingleDelete 100 100
              , testGroup getPairSingleDelete 100 1000

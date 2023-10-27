@@ -8,7 +8,7 @@ import TestLib.Benchmarking
 
 main :: IO ()
 main = defaultMain [
-  bgroup [i|Insert <= 30 chars (100 samples each)|] [
+  bgroup [i|Small insert|] [
              testGroup getPairSingleInsert 100 10
              , testGroup getPairSingleInsert 100 100
              , testGroup getPairSingleInsert 100 1000
