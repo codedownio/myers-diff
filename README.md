@@ -18,7 +18,7 @@ The [Diff](https://hackage.haskell.org/package/Diff) package also implements the
 
 You can generate all the benchmarks by running `./run_all_benchmarks.sh`. Full results can be found in `./benchmark_results`. All benchmarks were run on in Intel i9-13900K.
 
-TL;DR: 
+TL;DR:
 * `myers-diff` is faster by around 2.5x, and the advantage grows with larger inputs (around 100k characters).
 * `myers-diff` is more space-efficient by 5x for tiny inputs, shrinking to 1.5x for 10k character inputs and 1.3x for 100k character inputs.
 
@@ -30,7 +30,7 @@ Other benchmarks could be run, of course. Future work could involve testing inpu
 
 ![small_insert.png](./benchmark_results/small_insert.png)
 
-| Input size (chars) | diff-myers | Diff | Speedup |
+| Input size (chars) | myers-diff | Diff | Speedup |
 | ----------- | ----------- | ----------- | ----------- |
 | 10  | 408us | 1.07ms | 2.6x |
 | 100 | 587us | 1.53ms | 2.6x |
@@ -50,7 +50,7 @@ These results are very similar to those for small inserts.
 
 **Test scenario**: same as for the small inserts time test. In this test, we measure the bytes allocated by the diffing process using [weigh](https://hackage.haskell.org/package/weigh).
 
-|Input size (chars)|diff-myers (bytes)|Diff (bytes)| Diff / myers-diff|
+|Input size (chars)|myers-diff (bytes)|Diff (bytes)| Diff / myers-diff|
 |---|---|---|---|
 |10|1,681,120|8,904,176|5.3x|
 |100|3,619,928|13,833,520|3.8x|
