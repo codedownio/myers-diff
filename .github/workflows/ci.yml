@@ -52,7 +52,7 @@ jobs:
 
   stack:
     name: stack / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
