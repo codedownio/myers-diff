@@ -16,13 +16,13 @@ The [Diff](https://hackage.haskell.org/package/Diff) package also implements the
 
 ## Benchmarks
 
-You can generate all the benchmarks by running `run_all_benchmarks.sh`.
+You can generate all the benchmarks by running `run_all_benchmarks.sh`. Full results can be found in `./benchmark_results`.
 
-### Small inserts
+### Time: small inserts
 
 **Test scenario**: generate two random inputs of $N$ characters, then insert a random string of $\leq 30$ characters somewhere into the second one. Generate 100 such pairs and compare `myers-diff` with `Diff`.
 
-![small_inserts.png](./benchmark_results/small_insert.png)
+![small_insert.png](./benchmark_results/small_insert.png)
 
 | Input size (chars) | diff-myers | Diff | Speedup |
 | ----------- | ----------- | ----------- | ----------- |
@@ -31,3 +31,23 @@ You can generate all the benchmarks by running `run_all_benchmarks.sh`.
 | 1000 | 1.81ms | 3.46ms | 1.9x |
 | 10000 | 16.6ms | 40.8ms | 2.5x |
 | 100000 | 188ms | 823ms | 4.4x |
+
+### Time: small deletes
+
+**Test scenario**: same as for small inserts, but this time delete $\leq 30$ characters from the second input.
+
+![small_delete.png](./benchmark_results/small_delete.png)
+
+These results are much the same as for small inserts.
+
+### Space: small inserts
+
+**Test scenario**: same as for the small inserts time test.
+
+|Input size (chars)|diff-myers (bytes)|Diff (bytes)| Diff / myers-diff|
+|---|---|---|---|
+|10|1,681,120|8,904,176|5.3x|
+|100|3,619,928|13,833,520|3.8x|
+|1000|20,044,048|31,669,480|1.6x|
+|10000|171,103,240|250,594,080|1.5x|
+|100000|1,666,421,824|2,172,753,512|1.3x|
