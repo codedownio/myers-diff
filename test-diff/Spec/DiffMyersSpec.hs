@@ -3,7 +3,7 @@
 
 module Spec.DiffMyersSpec (spec) where
 
-import Data.Diff.DiffMyers
+import Data.Diff.Myers
 import Data.Diff.Types
 import Data.Text as T
 import Test.Sandwich
@@ -16,10 +16,10 @@ spec :: TopSpec
 spec = describe "DiffMyers" $ do
   describe "Single-line cases" $ do
     it "simple insertion" $ do
-      diff "ab" "abc" `shouldBe` ([ChangeEvent (Range (Position 0 2) (Position 0 2)) "c"])
+      diffTextsToChangeEvents "ab" "abc" `shouldBe` ([ChangeEvent (Range (Position 0 2) (Position 0 2)) "c"])
 
     it "simple deletion" $ do
-      diff "abc" "ab" `shouldBe` ([ChangeEvent (Range (Position 0 2) (Position 0 3)) ""])
+      diffTextsToChangeEvents "abc" "ab" `shouldBe` ([ChangeEvent (Range (Position 0 2) (Position 0 3)) ""])
 
   describe "QuickCheck" $ introduceQuickCheck $ modifyMaxSuccess (const 10000) $ do
     prop "Single change" $ \(InsertOrDelete (from, to)) -> verifyDiff from to
@@ -29,7 +29,7 @@ spec = describe "DiffMyers" $ do
 verifyDiff :: Text -> Text -> Bool
 verifyDiff from to = applyChangesText change from == to
   where
-    change = diff (T.unpack from) (T.unpack to)
+    change = diffTextsToChangeEvents from to
 
 main :: IO ()
 main = runSandwichWithCommandLineArgs defaultOptions spec
