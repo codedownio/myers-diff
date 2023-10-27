@@ -44,7 +44,7 @@ Other benchmarks could be run, of course. Future work could involve testing inpu
 
 ![small_delete.png](./benchmark_results/small_delete.png)
 
-These results are much the same as for small inserts.
+These results are very similar to those for small inserts.
 
 ### Space: small inserts
 
