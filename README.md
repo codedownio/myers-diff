@@ -16,7 +16,7 @@ The [Diff](https://hackage.haskell.org/package/Diff) package also implements the
 
 ## Benchmarks
 
-You can generate all the benchmarks by running `run_all_benchmarks.sh`. Full results can be found in `./benchmark_results`. All benchmarks were run on in Intel i9-13900K.
+You can generate all the benchmarks by running `./run_all_benchmarks.sh`. Full results can be found in `./benchmark_results`. All benchmarks were run on in Intel i9-13900K.
 
 TL;DR: 
 * `myers-diff` is faster by around 2.5x, and the advantage grows with larger inputs (around 100k characters).
