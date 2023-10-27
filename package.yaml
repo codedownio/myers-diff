@@ -137,13 +137,11 @@ benchmarks:
     - -with-rtsopts=-N
     - -O2
     dependencies:
-    - array
     - criterion
     - deepseq
     - myers-diff
     - QuickCheck
     - quickcheck-instances
-    - random
     - string-interpolate
     - text-rope
 
@@ -158,13 +156,11 @@ benchmarks:
     - -with-rtsopts=-N
     - -O2
     dependencies:
-    - array
     - criterion
     - deepseq
     - myers-diff
     - QuickCheck
     - quickcheck-instances
-    - random
     - string-interpolate
     - text-rope
 
@@ -179,7 +175,6 @@ benchmarks:
     - -with-rtsopts=-N
     - -O2
     dependencies:
-    - array
     - criterion
     - deepseq
     - myers-diff

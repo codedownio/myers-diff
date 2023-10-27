@@ -178,7 +178,6 @@ benchmark myers-diff-criterion-small-deletes
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       QuickCheck
-    , array
     , base >=4.7 && <5
     , containers
     , criterion
@@ -187,7 +186,6 @@ benchmark myers-diff-criterion-small-deletes
     , myers-diff
     , primitive
     , quickcheck-instances
-    , random
     , string-interpolate
     , text
     , text-rope
@@ -230,7 +228,6 @@ benchmark myers-diff-criterion-small-inserts
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       QuickCheck
-    , array
     , base >=4.7 && <5
     , containers
     , criterion
@@ -239,7 +236,6 @@ benchmark myers-diff-criterion-small-inserts
     , myers-diff
     , primitive
     , quickcheck-instances
-    , random
     , string-interpolate
     , text
     , text-rope
@@ -282,7 +278,6 @@ benchmark myers-diff-weigh
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       QuickCheck
-    , array
     , base >=4.7 && <5
     , containers
     , criterion
