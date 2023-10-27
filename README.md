@@ -20,5 +20,14 @@ You can generate all the benchmarks by running `run_all_benchmarks.sh`.
 
 ### Small inserts
 
-**Test scenario**: generate two random inputs of $N$ characters, then insert a random string of $\eq 30$ characters somewhere into the second one. Generate 100 such pairs and compare `myers-diff` with `Diff`.
+**Test scenario**: generate two random inputs of $N$ characters, then insert a random string of $\leq 30$ characters somewhere into the second one. Generate 100 such pairs and compare `myers-diff` with `Diff`.
 
+![small_inserts.png](./benchmark_results/small_insert.png)
+
+| Input size (chars) | diff-myers | Diff | Speedup |
+| ----------- | ----------- | ----------- | ----------- |
+| 10  | 408us | 1.07ms | 2.6x |
+| 100 | 587us | 1.53ms | 2.6x |
+| 1000 | 1.81ms | 3.46ms | 1.9x |
+| 10000 | 16.6ms | 40.8ms | 2.5x |
+| 100000 | 188ms | 823ms | 4.4x |
