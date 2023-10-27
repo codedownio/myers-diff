@@ -89,6 +89,7 @@ test-suite myers-diff-test
   other-modules:
       Spec.VectorMyersSpec
       TestLib.Apply
+      TestLib.Benchmarking
       TestLib.Generators
       TestLib.Instances
       TestLib.Util
@@ -149,6 +150,7 @@ benchmark myers-diff-criterion
   other-modules:
       Bench.VectorIO
       TestLib.Apply
+      TestLib.Benchmarking
       TestLib.Generators
       TestLib.Instances
       TestLib.Util
@@ -199,6 +201,7 @@ benchmark myers-diff-weigh
   main-is: Main.hs
   other-modules:
       TestLib.Apply
+      TestLib.Benchmarking
       TestLib.Generators
       TestLib.Instances
       TestLib.Util

@@ -3,10 +3,10 @@
 module Main (main) where
 
 import qualified Data.Diff.Myers as VM
+import qualified Data.List as L
 import Data.String.Interpolate
 import Data.Text as T
-import Data.Text.Encoding as T
-import Data.Vector.Unboxed.Mutable as VUM
+import TestLib.Benchmarking
 import TestLib.Instances ()
 import Weigh
 
@@ -15,62 +15,33 @@ import qualified Data.Diff.Diff as DD
 #endif
 
 
-main :: IO ()
-main = mainWith $ do
+testFunc :: [(String, String, Text, Text)] -> Weigh ()
+testFunc samples = do
+  func' "myers-diff" (L.map (\(_, _, initialText, finalText) -> (VM.diffTexts initialText finalText))) samples
 #ifdef DIFF
-  func "Diff" (uncurry DD.diff) (T.unpack file1, T.unpack file2)
+  func' "Diff" (L.map (\(initialString, finalString, _, _) -> (DD.diff initialString finalString))) samples
 #endif
 
-  func "myers-diff" (uncurry VM.diffTexts) (file1, file2)
+main :: IO ()
+main = do
+  samples10 <- getPairSingleInsert 100 10
+  samples100 <- getPairSingleInsert 100 100
+  samples1000 <- getPairSingleInsert 100 1000
+  samples10000 <- getPairSingleInsert 100 10000
+  samples100000 <- getPairSingleInsert 100 100000
 
-  -- value "file1 vector" (force (VU.fromList (T.unpack file1)))
-  -- value "file2 vector" (force (VU.fromList (T.unpack file2)))
+  mainWith $ do
+    wgroup [i|Single insert (100 samples each)|] $ do
+      testFunc samples10
+      testFunc samples100
+      testFunc samples1000
+      testFunc samples10000
+      testFunc samples100000
 
-  -- value "file1" file1
-  -- value "file2" file2
-
-  -- value "file2 string" (T.unpack file2)
-  -- value "file2 bytes" (T.encodeUtf8 file2)
-
-  -- action "file2 vector" (VUM.generate (T.length file2) (\i -> T.index file2 i))
-
-
-file1 :: Text
-file1 =
-  [__i|foo = 42
-       :t foo
-
-       homophones <- readFile "homophones.list"
-
-       putStrLn "HI"
-
-       abc
-
-       import Data.Aeson as A
-
-       -- | Here's a nice comment on bar
-       bar :: IO ()
-       bar = do
-         putStrLn "hello"
-         putStrLn "world"
-      |]
-
-file2 :: Text
-file2 =
-  [__i|foo = 42
-       :t foo
-
-       homophones <- readFile "homophones.list"
-
-       putStrLn "HI"
-
-       a
-
-       import Data.Aeson as A
-
-       -- | Here's a nice comment on bar
-       bar :: IO ()
-       bar = do
-         putStrLn "hello"
-         putStrLn "world"
-      |]
+    -- , wgroup [i|Single delete (100 samples each)|] [
+    --            testFunc getPairSingleDelete 100 10
+    --            , testFunc getPairSingleDelete 100 100
+    --            , testFunc getPairSingleDelete 100 1000
+    --            , testFunc getPairSingleDelete 100 10000
+    --            -- , testFunc getPairSingleDelete 100 100000
+    --            ]
