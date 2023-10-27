@@ -20,7 +20,7 @@ You can generate all the benchmarks by running `run_all_benchmarks.sh`. Full res
 
 ### Time: small inserts
 
-**Test scenario**: generate two random inputs of $N$ characters, then insert a random string of $\leq 30$ characters somewhere into the second one. Generate 100 such pairs and compare `myers-diff` with `Diff`.
+**Test scenario**: generate two random inputs of $N$ characters, then insert a random string of $\leq 30$ characters somewhere into the second one. Generate 100 such pairs and compare `myers-diff` with `Diff` using [criterion](https://hackage.haskell.org/package/criterion).
 
 ![small_insert.png](./benchmark_results/small_insert.png)
 
@@ -42,7 +42,7 @@ These results are much the same as for small inserts.
 
 ### Space: small inserts
 
-**Test scenario**: same as for the small inserts time test.
+**Test scenario**: same as for the small inserts time test. In this test, we measure the bytes allocated by the diffing process using [weigh](https://hackage.haskell.org/package/weigh).
 
 |Input size (chars)|diff-myers (bytes)|Diff (bytes)| Diff / myers-diff|
 |---|---|---|---|
