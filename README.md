@@ -18,9 +18,15 @@ The [Diff](https://hackage.haskell.org/package/Diff) package also implements the
 
 You can generate all the benchmarks by running `run_all_benchmarks.sh`. Full results can be found in `./benchmark_results`.
 
+TL;DR: 
+* `myers-diff` is faster by around 2.5x, and the advantage grows with larger inputs (around 100k characters).
+* `myers-diff` is more space-efficient by 5x for tiny inputs, shrinking to 1.5x for 10k character inputs and 1.3x for 100k character inputs.
+
+Other benchmarks could be run, of course. Future work could involve testing inputs with multiple separated edits, and/or edits of different sizes. Please file an issue if you'd like to discuss a particular workload.
+
 ### Time: small inserts
 
-**Test scenario**: generate two random inputs of $N$ characters, then insert a random string of $\leq 30$ characters somewhere into the second one. Generate 100 such pairs and compare `myers-diff` with `Diff` using [criterion](https://hackage.haskell.org/package/criterion).
+**Test scenario**: generate a random input of $N$ characters, then insert a random string of $\leq 30$ characters somewhere to produce a modified input. Generate 100 such pairs and compare the diffing time of `myers-diff` with `Diff` using [criterion](https://hackage.haskell.org/package/criterion).
 
 ![small_insert.png](./benchmark_results/small_insert.png)
 
