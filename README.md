@@ -16,6 +16,9 @@ The [Diff](https://hackage.haskell.org/package/Diff) package also implements the
 
 ## Benchmarks
 
-``` sh
-stack bench --flag myers-diff:diff
-```
+You can generate all the benchmarks by running `run_all_benchmarks.sh`.
+
+### Small inserts
+
+**Test scenario**: generate two random inputs of $N$ characters, then insert a random string of $\eq 30$ characters somewhere into the second one. Generate 100 such pairs and compare `myers-diff` with `Diff`.
+
