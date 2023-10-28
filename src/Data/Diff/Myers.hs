@@ -39,7 +39,6 @@ module Data.Diff.Myers (
 
 import Control.Monad.Primitive
 import Control.Monad.ST
-import Data.Bits (xor)
 import Data.Diff.Types
 import qualified Data.Foldable as F
 import Data.Function
@@ -113,7 +112,7 @@ diff'' g' p' e f i j = do
          VUM.set p 0
 
          flip fix 0 $ \loopBaseH -> \case
-           h | not (h <= ((bigL `pyDiv` 2) + (if (bigL `pyMod` 2) /= 0 then 1 else 0))) -> return []
+           h | not (h <= ((bigL `quot` 2) + (if (bigL `pyMod` 2) /= 0 then 1 else 0))) -> return []
            h -> do
              let loopH = loopBaseH (h + 1)
              flip fix (0 :: Int) $ \loopBaseR -> \case
@@ -165,10 +164,6 @@ diff'' g' p' e f i j = do
 {-# INLINABLE pyMod #-}
 pyMod :: Integral a => a -> a -> a
 pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
-
-{-# INLINABLE pyDiv #-}
-pyDiv :: Integral a => a -> a -> a
-pyDiv x y = if (x < 0) `xor` (y < 0) then -((-x) `div` y) else x `div` y
 
 
 -- | Convert edit script to LSP-style change events.
