@@ -5,7 +5,6 @@ module TestLib.Generators where
 import Data.Function
 import Data.String.Interpolate
 import Data.Text as T
-import Data.Word
 import Test.QuickCheck as Q
 import Test.QuickCheck.Instances.Text ()
 
@@ -72,7 +71,7 @@ arbitraryDeleteOn initial = do
   amountToDelete :: Int <- chooseInt (1, size)
 
   pos1 <- chooseInt (0, max 0 (T.length initial - 1))
-  pos2 <- chooseInt (pos1, min (pos1 + fromIntegral amountToDelete) (T.length initial))
+  pos2 <- chooseInt (pos1, min (pos1 + amountToDelete) (T.length initial))
 
   let (x, y) = T.splitAt pos1 initial
   let (_, z) = T.splitAt (pos2 - pos1) y
