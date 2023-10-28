@@ -6,6 +6,7 @@ import qualified Data.Diff.Myers as VM
 import qualified Data.List as L
 import Data.String.Interpolate
 import Data.Text as T
+import qualified Data.Vector.Unboxed as VU
 import TestLib.Benchmarking
 import TestLib.Instances ()
 import Weigh
@@ -15,11 +16,12 @@ import qualified Data.Diff.Diff as DD
 #endif
 
 
-testFunc :: Int -> [(String, String, Text, Text)] -> Weigh ()
+testFunc :: Int -> [(String, String, Text, Text, VU.Vector Char, VU.Vector Char)] -> Weigh ()
 testFunc inputSize samples = wgroup [i|#{inputSize} characters|] $ do
-  func' "myers-diff" (L.map (\(_, _, initialText, finalText) -> (VM.diffTexts initialText finalText))) samples
+  func' "myers-diff-text" (L.map (\(_, _, initialText, finalText, _, _) -> (VM.diffTexts initialText finalText))) samples
+  func' "myers-diff-vector" (L.map (\(_, _, _, _, initialVector, finalVector) -> (VM.diffVectors initialVector finalVector))) samples
 #ifdef DIFF
-  func' "Diff" (L.map (\(initialString, finalString, _, _) -> (DD.diff initialString finalString))) samples
+  func' "Diff" (L.map (\(initialString, finalString, _, _, _, _) -> (DD.diff initialString finalString))) samples
 #endif
 
 main :: IO ()

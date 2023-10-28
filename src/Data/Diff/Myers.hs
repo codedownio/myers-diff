@@ -24,6 +24,7 @@ module Data.Diff.Myers (
   , diffTextsToChangeEvents
   , diffTextsToChangeEventsConsolidate
   , diffTextsToChangeEvents'
+  , diffVectors
   , diffStrings
 
   -- * Lowest level diff function
@@ -70,6 +71,10 @@ diffTextsToChangeEvents' consolidateFn left right = F.toList $ editScriptToChang
   where
     l = VU.fromList (T.unpack left)
     r = VU.fromList (T.unpack right)
+
+-- | Diff 'VU.Vector's to produce an edit script.
+diffVectors :: VU.Vector Char -> VU.Vector Char -> Seq Edit
+diffVectors left right = runST $ diff left right
 
 -- | To use in benchmarking against other libraries that use String.
 diffStrings :: String -> String -> Seq Edit
