@@ -130,7 +130,7 @@ diff'' g' p' e f i j = do
          VUM.set p 0
 
          flip fix 0 $ \loopBaseH -> \case
-           h | not (h <= ((bigL `quot` 2) + (if (bigL `mod` 2) /= 0 then 1 else 0))) -> return []
+           h | not (h <= ((bigL `quot` 2) + (if (bigL `pyMod` 2) /= 0 then 1 else 0))) -> return []
            h -> do
              let loopH = loopBaseH (h + 1)
              flip fix (0 :: Int) $ \loopBaseR -> \case
@@ -143,8 +143,8 @@ diff'' g' p' e f i j = do
                    k -> do
                      let loopK = loopBaseK (k + 2)
                      aInitial <- do
-                       prevC <- unsafeRead c ((k-1) `mod` bigZ)
-                       nextC <- unsafeRead c ((k+1) `mod` bigZ)
+                       prevC <- unsafeRead c ((k-1) `pyMod` bigZ)
+                       nextC <- unsafeRead c ((k+1) `pyMod` bigZ)
                        return (if (k == (-h) || (k /= h && (prevC < nextC))) then nextC else prevC + 1)
                      let bInitial = aInitial - k
                      let (s, t) = (aInitial, bInitial)
@@ -157,12 +157,12 @@ diff'' g' p' e f i j = do
                                  | otherwise -> pure (a', b')
                           | otherwise -> pure (a', b')
 
-                     write c (k `mod` bigZ) a
+                     write c (k `pyMod` bigZ) a
                      let z = negate (k - w)
 
-                     cVal <- unsafeRead c (k `mod` bigZ)
-                     dVal <- unsafeRead d (z `mod` bigZ)
-                     if | (bigL `mod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
+                     cVal <- unsafeRead c (k `pyMod` bigZ)
+                     dVal <- unsafeRead d (z `pyMod` bigZ)
+                     if | (bigL `pyMod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
                             let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
                             if | bigD > 1 || (x /= u && y /= v) ->
                                   mappend <$> diff'' g p (VU.unsafeSlice 0 x e) (VU.unsafeSlice 0 y f) i j
@@ -178,6 +178,10 @@ diff'' g' p' e f i j = do
      | bigN > 0 -> return [EditDelete i (i + (bigN - 1))]
      | bigM == 0 -> return []
      | otherwise -> return [EditInsert i j (j + (bigM - 1))]
+
+{-# INLINABLE pyMod #-}
+pyMod :: Integral a => a -> a -> a
+pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
 
 
 -- | Convert edit script to LSP-style change events.
