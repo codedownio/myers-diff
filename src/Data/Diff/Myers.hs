@@ -41,6 +41,7 @@ module Data.Diff.Myers (
 
 import Control.Monad.Primitive
 import Control.Monad.ST
+import Data.Bits
 import Data.Diff.Types
 import qualified Data.Foldable as F
 import Data.Function
@@ -130,7 +131,7 @@ diff'' g' p' e f i j = do
          VUM.set p 0
 
          flip fix 0 $ \loopBaseH -> \case
-           h | not (h <= ((bigL `quot` 2) + (if (bigL `pyMod` 2) /= 0 then 1 else 0))) -> return []
+           h | not (h <= ((bigL `quot` 2) + (if (intMod2 bigL) /= 0 then 1 else 0))) -> return []
            h -> do
              let loopH = loopBaseH (h + 1)
              flip fix (0 :: Int) $ \loopBaseR -> \case
@@ -162,7 +163,7 @@ diff'' g' p' e f i j = do
 
                      cVal <- unsafeRead c (k `pyMod` bigZ)
                      dVal <- unsafeRead d (z `pyMod` bigZ)
-                     if | (bigL `pyMod` 2 == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
+                     if | (intMod2 bigL == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
                             let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
                             if | bigD > 1 || (x /= u && y /= v) ->
                                   mappend <$> diff'' g p (VU.unsafeSlice 0 x e) (VU.unsafeSlice 0 y f) i j
@@ -183,6 +184,9 @@ diff'' g' p' e f i j = do
 pyMod :: Integral a => a -> a -> a
 pyMod x y = if y >= 0 then x `mod` y else (x `mod` y) - y
 
+{-# INLINABLE intMod2 #-}
+intMod2 :: Int -> Int
+intMod2 n = n .&. 1
 
 -- | Convert edit script to LSP-style change events.
 editScriptToChangeEvents :: VU.Vector Char -> VU.Vector Char -> Seq Edit -> Seq ChangeEvent
