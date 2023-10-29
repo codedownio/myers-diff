@@ -90,6 +90,8 @@ diff :: (
   ) => Vector a -> Vector a -> m (Seq Edit)
 diff e f = diff' e f 0 0
 
+{-# SPECIALISE diff' :: Vector Char -> Vector Char -> Int -> Int -> ST () (Seq Edit) #-}
+{-# SPECIALISE diff' :: Vector Char -> Vector Char -> Int -> Int -> IO (Seq Edit) #-}
 diff' :: (
   PrimMonad m, Unbox a, Eq a, Show a
   ) => Vector a -> Vector a -> Int -> Int -> m (Seq Edit)
@@ -100,6 +102,8 @@ diff' e f i j = do
   p <- new bigZ
   diff'' g p e f i j
 
+{-# SPECIALISE diff'' :: MVector (PrimState (ST ())) Int -> MVector (PrimState (ST ())) Int -> Vector Char -> Vector Char -> Int -> Int -> ST () (Seq Edit) #-}
+{-# SPECIALISE diff'' :: MVector (PrimState IO) Int -> MVector (PrimState IO) Int -> Vector Char -> Vector Char -> Int -> Int -> IO (Seq Edit) #-}
 diff'' :: (
   PrimMonad m, Unbox a, Eq a, Show a
   ) => MVector (PrimState m) Int -> MVector (PrimState m) Int -> Vector a -> Vector a -> Int -> Int -> m (Seq Edit)
