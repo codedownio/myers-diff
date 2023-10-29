@@ -7,13 +7,16 @@ import Data.String.Interpolate
 import TestLib.Benchmarking
 
 
+numSamples :: Int
+numSamples = 500
+
 main :: IO ()
 main = defaultMain [
   bgroup [i|Small delete|] [
-             testGroup getPairSingleDelete 100 10
-             , testGroup getPairSingleDelete 100 100
-             , testGroup getPairSingleDelete 100 1000
-             , testGroup getPairSingleDelete 100 10000
-             , testGroup getPairSingleDelete 100 100000
+             testGroup getPairSingleDelete numSamples 10
+             , testGroup getPairSingleDelete numSamples 100
+             , testGroup getPairSingleDelete numSamples 1000
+             , testGroup getPairSingleDelete numSamples 10000
+             , testGroup getPairSingleDelete numSamples 100000
              ]
   ]
