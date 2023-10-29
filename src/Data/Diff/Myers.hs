@@ -24,6 +24,7 @@ module Data.Diff.Myers (
   , diffTextsToChangeEvents
   , diffTextsToChangeEventsConsolidate
   , diffTextsToChangeEvents'
+  , diffTexts'
   , diffVectors
   , diffStrings
 
@@ -55,6 +56,14 @@ diffTexts :: Text -> Text -> Seq Edit
 diffTexts left right = runST $ do
   let l = VU.fromList (T.unpack left)
   let r = VU.fromList (T.unpack right)
+  diff l r
+
+-- | Diff 'Text's to produce an edit script.
+-- EXPERIMENTAL: use 'VU.fromListN' instead of 'VU.fromList'
+diffTexts' :: Text -> Text -> Seq Edit
+diffTexts' left right = runST $ do
+  let l = VU.fromListN (T.length left) (T.unpack left)
+  let r = VU.fromListN (T.length right) (T.unpack right)
   diff l r
 
 -- | Diff 'Text's to produce LSP-style change events.
