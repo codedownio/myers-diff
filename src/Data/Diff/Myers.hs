@@ -24,7 +24,6 @@ module Data.Diff.Myers (
   , diffTextsToChangeEvents
   , diffTextsToChangeEventsConsolidate
   , diffTextsToChangeEvents'
-  , diffTexts'
   , diffVectors
   , diffStrings
 
@@ -54,18 +53,9 @@ import Prelude hiding (read)
 
 -- | Diff 'Text's to produce an edit script.
 diffTexts :: Text -> Text -> Seq Edit
-diffTexts left right = runST $ do
-  let l = VU.fromList (T.unpack left)
-  let r = VU.fromList (T.unpack right)
-  diff l r
-
--- | Diff 'Text's to produce an edit script.
--- EXPERIMENTAL: use 'VU.fromListN' instead of 'VU.fromList'
-diffTexts' :: Text -> Text -> Seq Edit
-diffTexts' left right = runST $ do
-  let l = VU.fromListN (T.length left) (T.unpack left)
-  let r = VU.fromListN (T.length right) (T.unpack right)
-  diff l r
+diffTexts left right = runST $
+  diff (VU.unfoldr T.uncons left)
+       (VU.unfoldr T.uncons right)
 
 -- | Diff 'Text's to produce LSP-style change events.
 diffTextsToChangeEvents :: Text -> Text -> [ChangeEvent]
@@ -79,8 +69,8 @@ diffTextsToChangeEventsConsolidate = diffTextsToChangeEvents' consolidateEditScr
 diffTextsToChangeEvents' :: (Seq Edit -> Seq Edit) -> Text -> Text -> [ChangeEvent]
 diffTextsToChangeEvents' consolidateFn left right = F.toList $ editScriptToChangeEvents l r (consolidateFn (runST (diff l r)))
   where
-    l = VU.fromList (T.unpack left)
-    r = VU.fromList (T.unpack right)
+    l = VU.unfoldr T.uncons left
+    r = VU.unfoldr T.uncons right
 
 -- | Diff 'VU.Vector's to produce an edit script.
 diffVectors :: VU.Vector Char -> VU.Vector Char -> Seq Edit
@@ -242,10 +232,6 @@ editScriptToChangeEvents left right = go mempty 0 0 0
 
 -- * Consolidate edits
 
--- λ> diffTexts "x" "xab"
--- fromList [EditInsert {insertPos = 1, insertFrom = 1, insertTo = 1},EditInsert {insertPos = 1, insertFrom = 2, insertTo = 2}]
--- λ> diffTexts "xab" "x"
--- fromList [EditDelete {deleteFrom = 1, deleteTo = 1},EditDelete {deleteFrom = 2, deleteTo = 2}]
 -- | Consolidate adjacent edit script entries to shorten the script.
 consolidateEditScript :: Seq Edit -> Seq Edit
 consolidateEditScript ((EditInsert pos1 from1 to1) :<| (EditInsert pos2 from2 to2) :<| rest)

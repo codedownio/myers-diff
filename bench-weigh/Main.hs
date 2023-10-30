@@ -21,7 +21,6 @@ testFunc inputSize samples = wgroup [i|#{inputSize} characters|] $ do
   func' "myers-diff-vector" (L.map (\(_, _, _, _, initialVector, finalVector) -> (VM.diffVectors initialVector finalVector))) samples
   func' "myers-diff-string" (L.map (\(initialString, finalString, _, _, _, _) -> (VM.diffStrings initialString finalString))) samples
   func' "myers-diff-text" (L.map (\(_, _, initialText, finalText, _, _) -> (VM.diffTexts initialText finalText))) samples
-  func' "myers-diff-text'" (L.map (\(_, _, initialText, finalText, _, _) -> (VM.diffTexts' initialText finalText))) samples
 #ifdef DIFF
   func' "Diff" (L.map (\(initialString, finalString, _, _, _, _) -> (DD.diff initialString finalString))) samples
 #endif

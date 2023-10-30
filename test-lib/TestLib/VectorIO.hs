@@ -14,10 +14,9 @@ import Data.Vector.Unboxed as VU
 
 -- | Diff 'Text's to produce an edit script.
 diffTextsIO :: Text -> Text -> IO (Seq Edit)
-diffTextsIO left right = do
-  let l = VU.fromList (T.unpack left)
-  let r = VU.fromList (T.unpack right)
-  diff l r
+diffTextsIO left right =
+  diff (VU.unfoldr T.uncons left)
+       (VU.unfoldr T.uncons right)
 
 -- | Diff 'Text's to produce LSP-style change events.
 diffTextsToChangeEventsIO :: Text -> Text -> IO [ChangeEvent]
@@ -29,15 +28,14 @@ diffTextsToChangeEventsIOConsolidate = diffTextsToChangeEventsIO' consolidateEdi
 
 diffTextsToChangeEventsIO' :: (Seq Edit -> Seq Edit) -> Text -> Text -> IO [ChangeEvent]
 diffTextsToChangeEventsIO' consolidateFn left right = do
-  -- This is faster than VU.fromList (T.unpack left), right?
-  let l = VU.fromList (T.unpack left)
-  let r = VU.fromList (T.unpack right)
+  let l = VU.unfoldr T.uncons left
+  let r = VU.unfoldr T.uncons right
   edits <- diff l r
+
   return $ F.toList $ editScriptToChangeEvents l r (consolidateFn edits)
 
 -- | To use in benchmarking against other libraries that use String
 diffStringsIO :: String -> String -> IO (Seq Edit)
-diffStringsIO left right = do
-  let leftThawed = VU.fromList left
-  let rightThawed = VU.fromList right
-  diff leftThawed rightThawed
+diffStringsIO left right =
+  diff (VU.fromList left)
+       (VU.fromList right)

@@ -37,7 +37,6 @@ testGroup getPair numSamples inputSize =
       bench "myers-diff-vector" $ nf (L.map (\(_, _, _, _, initialVector, finalVector) -> (VM.diffVectors initialVector finalVector))) samples
       , bench "myers-diff-string" $ nf (L.map (\(initialString, finalString, _, _, _, _) -> (VM.diffStrings initialString finalString))) samples
       , bench "myers-diff-text" $ nf (L.map (\(_, _, initialText, finalText, _, _) -> (VM.diffTexts initialText finalText))) samples
-      , bench "myers-diff-text'" $ nf (L.map (\(_, _, initialText, finalText, _, _) -> (VM.diffTexts' initialText finalText))) samples
 #ifdef DIFF
       , bench "Diff" $ nf (L.map (\(initialString, finalString, _, _, _, _) -> (DD.diff initialString finalString))) samples
 #endif
@@ -54,7 +53,7 @@ getPairWithEdit makeEdit numSamples inputSize = do
 
     return (T.unpack t1, T.unpack t2
            , t1, t2
-           , VU.fromList (T.unpack t1), VU.fromList (T.unpack t2)
+           , VU.unfoldr T.uncons t1, VU.unfoldr T.uncons t2
            )
 
 getPairSingleInsert :: PairFn
