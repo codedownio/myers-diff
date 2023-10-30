@@ -15,8 +15,8 @@ import Data.Vector.Unboxed as VU
 -- | Diff 'Text's to produce an edit script.
 diffTextsIO :: Text -> Text -> IO (Seq Edit)
 diffTextsIO left right =
-  diff (VU.unfoldr T.uncons left)
-       (VU.unfoldr T.uncons right)
+  diff (fastTextToVector left)
+       (fastTextToVector right)
 
 -- | Diff 'Text's to produce LSP-style change events.
 diffTextsToChangeEventsIO :: Text -> Text -> IO [ChangeEvent]
@@ -28,8 +28,8 @@ diffTextsToChangeEventsIOConsolidate = diffTextsToChangeEventsIO' consolidateEdi
 
 diffTextsToChangeEventsIO' :: (Seq Edit -> Seq Edit) -> Text -> Text -> IO [ChangeEvent]
 diffTextsToChangeEventsIO' consolidateFn left right = do
-  let l = VU.unfoldr T.uncons left
-  let r = VU.unfoldr T.uncons right
+  let l = fastTextToVector left
+  let r = fastTextToVector right
   edits <- diff l r
 
   return $ F.toList $ editScriptToChangeEvents l r (consolidateFn edits)

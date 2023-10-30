@@ -34,6 +34,9 @@ module Data.Diff.Myers (
   , editScriptToChangeEvents
   , consolidateEditScript
 
+  -- * Util
+  , fastTextToVector
+
   -- * Types
   , Edit(..)
   ) where
@@ -46,6 +49,7 @@ import qualified Data.Foldable as F
 import Data.Function
 import Data.Sequence as Seq
 import Data.Text as T
+import qualified Data.Text.Internal.Fusion as TI
 import Data.Vector.Unboxed as VU
 import Data.Vector.Unboxed.Mutable as VUM
 import Prelude hiding (read)
@@ -54,8 +58,8 @@ import Prelude hiding (read)
 -- | Diff 'Text's to produce an edit script.
 diffTexts :: Text -> Text -> Seq Edit
 diffTexts left right = runST $
-  diff (VU.unfoldr T.uncons left)
-       (VU.unfoldr T.uncons right)
+  diff (fastTextToVector left)
+       (fastTextToVector right)
 
 -- | Diff 'Text's to produce LSP-style change events.
 diffTextsToChangeEvents :: Text -> Text -> [ChangeEvent]
@@ -69,8 +73,8 @@ diffTextsToChangeEventsConsolidate = diffTextsToChangeEvents' consolidateEditScr
 diffTextsToChangeEvents' :: (Seq Edit -> Seq Edit) -> Text -> Text -> [ChangeEvent]
 diffTextsToChangeEvents' consolidateFn left right = F.toList $ editScriptToChangeEvents l r (consolidateFn (runST (diff l r)))
   where
-    l = VU.unfoldr T.uncons left
-    r = VU.unfoldr T.uncons right
+    l = fastTextToVector left
+    r = fastTextToVector right
 
 -- | Diff 'VU.Vector's to produce an edit script.
 diffVectors :: VU.Vector Char -> VU.Vector Char -> Seq Edit
@@ -240,3 +244,25 @@ consolidateEditScript ((EditDelete from1 to1) :<| (EditDelete from2 to2) :<| res
   | to1 + 1 == from2 = consolidateEditScript ((EditDelete from1 to2) <| rest)
 consolidateEditScript (x :<| y :<| rest) = x <| (consolidateEditScript (y <| rest))
 consolidateEditScript x = x
+
+
+-- | This is currently the only way to convert a 'Text' to a 'VU.Vector' without extraneous allocations.
+-- Taken from https://stackoverflow.com/a/77388392/2659595
+-- Once the text library contains a foldM function, we can switch to that and avoid importing internal
+-- functions.
+-- See https://github.com/haskell/text/pull/543
+fastTextToVector :: Text -> VU.Vector Char
+fastTextToVector t =
+  case TI.stream t of
+    TI.Stream step s0 _ -> VU.create $ do
+      m <- VUM.new (T.length t)
+      let
+        go s i =
+          case step s of
+            TI.Done -> pure ()
+            TI.Skip s' -> go s' i
+            TI.Yield x s' -> do
+              VUM.write m i x
+              go s' (i + 1)
+      go s0 0
+      pure m

@@ -53,7 +53,7 @@ getPairWithEdit makeEdit numSamples inputSize = do
 
     return (T.unpack t1, T.unpack t2
            , t1, t2
-           , VU.unfoldr T.uncons t1, VU.unfoldr T.uncons t2
+           , VM.fastTextToVector t1, VM.fastTextToVector t2
            )
 
 getPairSingleInsert :: PairFn
