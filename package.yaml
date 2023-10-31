@@ -183,3 +183,23 @@ benchmarks:
     - string-interpolate
     - text-rope
     - weigh
+
+  micro:
+    main:                Main.hs
+    source-dirs:
+    - bench-micro
+    - test-lib
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O2
+    dependencies:
+    - criterion
+    - deepseq
+    - myers-diff
+    - QuickCheck
+    - quickcheck-instances
+    - string-interpolate
+    - text-rope
+    - weigh
