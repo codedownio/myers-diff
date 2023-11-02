@@ -8,7 +8,7 @@ import TestLib.Benchmarking
 
 
 numSamples :: Int
-numSamples = 500
+numSamples = 100
 
 main :: IO ()
 main = defaultMain [

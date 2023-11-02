@@ -37,6 +37,9 @@ testGroup getPair numSamples inputSize =
       bench "myers-diff-vector" $ nf (L.map (\(_, _, _, _, initialVector, finalVector) -> (VM.diffVectors initialVector finalVector))) samples
       , bench "myers-diff-string" $ nf (L.map (\(initialString, finalString, _, _, _, _) -> (VM.diffStrings initialString finalString))) samples
       , bench "myers-diff-text" $ nf (L.map (\(_, _, initialText, finalText, _, _) -> (VM.diffTexts initialText finalText))) samples
+      , bench "myers-diff-text-unfoldr" $ nf (L.map (\(_, _, initialText, finalText, _, _) -> (VM.diffTextsUnfoldr initialText finalText))) samples
+      , bench "myers-diff-text-deepseq" $ nf (L.map (\(_, _, initialText, finalText, _, _) -> (VM.diffTextsFastNf initialText finalText))) samples
+      , bench "myers-diff-orig" $ nf (L.map (\(_, _, initialText, finalText, _, _) -> (VM.diffTextsOrig initialText finalText))) samples
 #ifdef DIFF
       , bench "Diff" $ nf (L.map (\(initialString, finalString, _, _, _, _) -> (DD.diff initialString finalString))) samples
 #endif

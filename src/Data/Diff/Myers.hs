@@ -21,6 +21,9 @@ This repo also can also build a couple other versions for benchmarking compariso
 module Data.Diff.Myers (
   -- * Pure diffing (uses ST monad)
   diffTexts
+  , diffTextsUnfoldr
+  , diffTextsFastNf
+  , diffTextsOrig
   , diffTextsToChangeEvents
   , diffTextsToChangeEventsConsolidate
   , diffTextsToChangeEvents'
@@ -41,6 +44,7 @@ module Data.Diff.Myers (
   , Edit(..)
   ) where
 
+import Control.DeepSeq
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Bits
@@ -60,6 +64,22 @@ diffTexts :: Text -> Text -> Seq Edit
 diffTexts left right = runST $
   diff (fastTextToVector left)
        (fastTextToVector right)
+
+diffTextsOrig :: Text -> Text -> Seq Edit
+diffTextsOrig left right = runST $
+  diffOrig (fastTextToVector left)
+           (fastTextToVector right)
+
+-- | Diff 'Text's to produce an edit script.
+diffTextsUnfoldr :: Text -> Text -> Seq Edit
+diffTextsUnfoldr left right = runST $
+  diff (VU.unfoldr T.uncons left)
+       (VU.unfoldr T.uncons right)
+
+diffTextsFastNf :: Text -> Text -> Seq Edit
+diffTextsFastNf left right = runST $
+  diff (fastTextToVectorNf left)
+       (fastTextToVectorNf right)
 
 -- | Diff 'Text's to produce LSP-style change events.
 diffTextsToChangeEvents :: Text -> Text -> [ChangeEvent]
@@ -125,6 +145,93 @@ diff'' g' p' e f i j = do
          VUM.set p 0
 
          flip fix 0 $ \loopBaseH -> \case
+           h | not (h <= ((bigL `unsafeShiftR` 1) + (intMod2 bigL))) -> return []
+           h -> do
+             let loopH = loopBaseH (h + 1)
+             flip fix (0 :: Int) $ \loopBaseR -> \case
+               r | not (r <= 1) -> loopH
+               r -> do
+                 let loopR = loopBaseR (r + 1)
+                 let (c, d, o, m) = if r == 0 then (g, p, 1, 1) else (p, g, 0, -1)
+                 flip fix (negate (h - (2 * (max 0 (h - bigM))))) $ \loopBaseK -> \case
+                   k | not (k <= (h - (2 * (max 0 (h - bigN))))) -> loopR
+                   k -> do
+                     let loopK = loopBaseK (k + 2)
+                     aInitial <- do
+                       prevC <- unsafeRead c ((k-1) `pyMod` bigZ)
+                       nextC <- unsafeRead c ((k+1) `pyMod` bigZ)
+                       return (if (k == (-h) || (k /= h && (prevC < nextC))) then nextC else prevC + 1)
+                     let bInitial = aInitial - k
+                     let (s, t) = (aInitial, bInitial)
+
+                     (a, b) <- flip fix (aInitial, bInitial) $ \loop (a', b') -> do
+                       if | a' < bigN && b' < bigM -> do
+                              let eVal = e `unsafeIndex` (((1 - o) * bigN) + (m*a') + (o - 1))
+                              let fVal = f `unsafeIndex` (((1 - o) * bigM) + (m*b') + (o - 1))
+                              if | eVal == fVal -> loop (a' + 1, b' + 1)
+                                 | otherwise -> pure (a', b')
+                          | otherwise -> pure (a', b')
+
+                     write c (k `pyMod` bigZ) a
+                     let z = negate (k - w)
+
+                     cVal <- unsafeRead c (k `pyMod` bigZ)
+                     dVal <- unsafeRead d (z `pyMod` bigZ)
+                     if | (even (bigL - o)) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
+                            let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
+                            if | bigD > 1 || (x /= u && y /= v) ->
+                                  mappend <$> diff'' g p (VU.unsafeSlice 0 x e) (VU.unsafeSlice 0 y f) i j
+                                          <*> diff'' g p (VU.unsafeSlice u (bigN - u) e) (VU.unsafeSlice v (bigM - v) f) (i+u) (j+v)
+                               | bigM > bigN ->
+                                  diff'' g p (VU.unsafeSlice 0 0 e) (VU.unsafeSlice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
+                               | bigM < bigN ->
+                                  diff'' g p (VU.unsafeSlice bigM (bigN - bigM) e) (VU.unsafeSlice 0 0 f) (i+bigM) (j+bigM)
+                               | otherwise -> return []
+                        | otherwise -> loopK
+
+
+     | bigN > 0 -> return [EditDelete i (i + (bigN - 1))]
+     | bigM == 0 -> return []
+     | otherwise -> return [EditInsert i j (j + (bigM - 1))]
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+diffOrig :: (
+  PrimMonad m, Unbox a, Eq a, Show a
+  ) => Vector a -> Vector a -> m (Seq Edit)
+diffOrig e f = diffOrig' e f 0 0
+
+{-# SPECIALISE diffOrig' :: Vector Char -> Vector Char -> Int -> Int -> ST () (Seq Edit) #-}
+{-# SPECIALISE diffOrig' :: Vector Char -> Vector Char -> Int -> Int -> IO (Seq Edit) #-}
+diffOrig' :: (
+  PrimMonad m, Unbox a, Eq a, Show a
+  ) => Vector a -> Vector a -> Int -> Int -> m (Seq Edit)
+diffOrig' e f i j = do
+  let (bigN, bigM) = (VU.length e, VU.length f)
+  let bigZ = (2 * (min bigN bigM)) + 2
+  g <- new bigZ
+  p <- new bigZ
+  diffOrig'' g p e f i j
+
+{-# SPECIALISE diffOrig'' :: MVector (PrimState (ST ())) Int -> MVector (PrimState (ST ())) Int -> Vector Char -> Vector Char -> Int -> Int -> ST () (Seq Edit) #-}
+{-# SPECIALISE diffOrig'' :: MVector (PrimState IO) Int -> MVector (PrimState IO) Int -> Vector Char -> Vector Char -> Int -> Int -> IO (Seq Edit) #-}
+diffOrig'' :: (
+  PrimMonad m, Unbox a, Eq a, Show a
+  ) => MVector (PrimState m) Int -> MVector (PrimState m) Int -> Vector a -> Vector a -> Int -> Int -> m (Seq Edit)
+diffOrig'' g' p' e f i j = do
+  let (bigN, bigM) = (VU.length e, VU.length f)
+  let (bigL, bigZ) = (bigN + bigM, (2 * (min bigN bigM)) + 2)
+
+  if | bigN > 0 && bigM > 0 -> do
+         let w = bigN - bigM
+
+         -- Clear out the reused memory vectors
+         let g = VUM.unsafeSlice 0 bigZ g'
+         VUM.set g 0
+         let p = VUM.unsafeSlice 0 bigZ p'
+         VUM.set p 0
+
+         flip fix 0 $ \loopBaseH -> \case
            h | not (h <= ((bigL `quot` 2) + (if (intMod2 bigL) /= 0 then 1 else 0))) -> return []
            h -> do
              let loopH = loopBaseH (h + 1)
@@ -160,12 +267,12 @@ diff'' g' p' e f i j = do
                      if | (intMod2 bigL == o) && (z >= (negate (h-o))) && (z <= (h-o)) && (cVal + dVal >= bigN) -> do
                             let (bigD, x, y, u, v) = if o == 1 then ((2*h)-1, s, t, a, b) else (2*h, bigN-a, bigM-b, bigN-s, bigM-t)
                             if | bigD > 1 || (x /= u && y /= v) ->
-                                  mappend <$> diff'' g p (VU.unsafeSlice 0 x e) (VU.unsafeSlice 0 y f) i j
-                                          <*> diff'' g p (VU.unsafeSlice u (bigN - u) e) (VU.unsafeSlice v (bigM - v) f) (i+u) (j+v)
+                                  mappend <$> diffOrig'' g p (VU.unsafeSlice 0 x e) (VU.unsafeSlice 0 y f) i j
+                                          <*> diffOrig'' g p (VU.unsafeSlice u (bigN - u) e) (VU.unsafeSlice v (bigM - v) f) (i+u) (j+v)
                                | bigM > bigN ->
-                                  diff'' g p (VU.unsafeSlice 0 0 e) (VU.unsafeSlice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
+                                  diffOrig'' g p (VU.unsafeSlice 0 0 e) (VU.unsafeSlice bigN (bigM - bigN) f) (i+bigN) (j+bigN)
                                | bigM < bigN ->
-                                  diff'' g p (VU.unsafeSlice bigM (bigN - bigM) e) (VU.unsafeSlice 0 0 f) (i+bigM) (j+bigM)
+                                  diffOrig'' g p (VU.unsafeSlice bigM (bigN - bigM) e) (VU.unsafeSlice 0 0 f) (i+bigM) (j+bigM)
                                | otherwise -> return []
                         | otherwise -> loopK
 
@@ -173,6 +280,8 @@ diff'' g' p' e f i j = do
      | bigN > 0 -> return [EditDelete i (i + (bigN - 1))]
      | bigM == 0 -> return []
      | otherwise -> return [EditInsert i j (j + (bigM - 1))]
+
+--------------------------------------------------------------------------------------------------------------------------------
 
 {-# INLINABLE pyMod #-}
 pyMod :: Integral a => a -> a -> a
@@ -266,3 +375,9 @@ fastTextToVector t =
               go s' (i + 1)
       go s0 0
       pure m
+
+fastTextToVectorNf :: Text -> VU.Vector Char
+fastTextToVectorNf t = let
+  v = fastTextToVector t
+  in
+  v `deepseq` v
