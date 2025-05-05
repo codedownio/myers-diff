@@ -48,7 +48,8 @@ import Data.Diff.Types
 import qualified Data.Foldable as F
 import Data.Function
 import Data.Sequence as Seq
-import Data.Text as T
+import Data.Text (Text)
+import qualified Data.Text as T
 import qualified Data.Text.Internal.Fusion as TI
 import Data.Vector.Unboxed as VU
 import Data.Vector.Unboxed.Mutable as VUM
@@ -231,7 +232,7 @@ editScriptToChangeEvents left right = go mempty 0 0 0
     countNewlinesAndLastLineLength :: VU.Vector Char -> (Int, Int)
     countNewlinesAndLastLineLength = VU.foldl' (\(tot, lastLineLength) ch -> if ch == '\n' then (tot + 1, 0) else (tot, lastLineLength + 1)) (0, 0)
 
-    vectorToText :: VU.Vector Char -> T.Text
+    vectorToText :: VU.Vector Char -> Text
     vectorToText = T.pack . VU.toList
 
 -- * Consolidate edits

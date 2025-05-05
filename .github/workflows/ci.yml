@@ -5,50 +5,53 @@ on:
   push:
 
 jobs:
-  # cabal:
-  #   name: cabal / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os:
-  #       - ubuntu-latest
-  #       - macOS-latest
-  #       # - windows-latest
-  #       ghc:
-  #       - "8.10.7"
-  #       - "9.0.2"
-  #       - "9.2.7"
-  #       - "9.4.4"
+  cabal:
+    name: cabal / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - ubuntu-latest
+        - macOS-latest
+        # - windows-latest
+        ghc:
+        - "8.10.7"
+        - "9.0.2"
+        - "9.2.8"
+        - "9.4.8"
+        - "9.6.7"
+        - "9.8.4"
+        - "9.10.1"
 
-  #   steps:
-  #   - uses: actions/checkout@v3
+    steps:
+    - uses: actions/checkout@v3
 
-  #   - uses: haskell/actions/setup@v1
-  #     id: setup-haskell-cabal
-  #     name: Setup Haskell
-  #     with:
-  #       ghc-version: ${{ matrix.ghc }}
-  #       cabal-version: "latest"
+    - uses: haskell/actions/setup@v2
+      id: setup-haskell-cabal
+      name: Setup Haskell
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: "latest"
 
-  #   - name: Freeze
-  #     run: |
-  #       cabal freeze
+    - name: Freeze
+      run: |
+        cabal freeze
 
-  #   # - uses: actions/cache@v3
-  #   #   name: Cache ~/.cabal/store
-  #   #   with:
-  #   #     path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-  #   #     key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+    - uses: actions/cache@v3
+      name: Cache ~/.cabal/store
+      with:
+        path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
 
-  #   - name: Build
-  #     run: |
-  #       cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
-  #       cabal build all
+    - name: Build
+      run: |
+        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+        cabal build all
 
-  #   - name: Test
-  #     run: |
-  #       cabal test all
+    - name: Test
+      run: |
+        cabal test all
 
   stack:
     name: stack / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
@@ -63,8 +66,11 @@ jobs:
         ghc:
         - "8.10.7"
         - "9.0.2"
-        - "9.2.7"
-        - "9.4.4"
+        - "9.2.8"
+        - "9.4.8"
+        - "9.6.7"
+        - "9.8.4"
+        - "9.10.1"
 
     steps:
     - uses: actions/checkout@v3
@@ -84,7 +90,8 @@ jobs:
 
     - name: Build
       run: |
-        stack build --system-ghc \
+        stack build \
+          --system-ghc \
           --flag myers-diff:diff \
           --flag myers-diff:uni_myers \
           --test --bench --no-run-tests --no-run-benchmarks

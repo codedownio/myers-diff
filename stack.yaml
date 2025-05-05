@@ -1,5 +1,5 @@
 
-resolver: nightly-2023-03-30
+resolver: nightly-2025-05-05
 
 packages:
 - .
@@ -8,3 +8,7 @@ nix:
   pure: false
   packages:
   - zlib
+
+# For testing https://github.com/codedownio/myers-diff/issues/13
+extra-deps:
+- text-2.1.2
