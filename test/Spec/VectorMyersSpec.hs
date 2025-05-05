@@ -5,8 +5,9 @@
 module Spec.VectorMyersSpec (spec) where
 
 import Control.Monad.Catch (MonadThrow)
-import Data.Diff.Types
+import Control.Monad.IO.Class
 import Data.Diff.Myers
+import Data.Diff.Types
 import Data.Text as T
 import Test.Sandwich
 import Test.Sandwich.QuickCheck
@@ -61,7 +62,7 @@ spec = describe "VectorMyers" $ do
       prop "Multiple changes" $ \(DocMultiInsertOrDelete (from, to)) -> verifyDiff from to
 
 
-checkDiff :: MonadThrow m => Text -> Text -> [ChangeEvent] -> SpecFree context m ()
+checkDiff :: (MonadThrow m, MonadIO m) => Text -> Text -> [ChangeEvent] -> SpecFree context m ()
 checkDiff from to changes = it (show from <> " -> " <> show to) $ do
   -- Check that the given changes actually work
   applyChangesText changes from `shouldBe` to
@@ -69,7 +70,7 @@ checkDiff from to changes = it (show from <> " -> " <> show to) $ do
   -- Diff produces the desired changse
   diffTextsToChangeEvents from to `shouldBe` changes
 
-checkDiffConsolidated :: MonadThrow m => Text -> Text -> [ChangeEvent] -> SpecFree context m ()
+checkDiffConsolidated :: (MonadThrow m, MonadIO m) => Text -> Text -> [ChangeEvent] -> SpecFree context m ()
 checkDiffConsolidated from to changes = it (show from <> " -> " <> show to <> " (consolidated)") $ do
   -- Check that the given changes actually work
   applyChangesText changes from `shouldBe` to
