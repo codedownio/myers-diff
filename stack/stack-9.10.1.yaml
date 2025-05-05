@@ -1,0 +1,10 @@
+
+resolver: nightly-2025-05-05
+
+packages:
+- ../
+
+nix:
+  pure: false
+  packages:
+  - zlib

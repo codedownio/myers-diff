@@ -1,0 +1,10 @@
+
+resolver: lts-23.21
+
+packages:
+- ../
+
+nix:
+  pure: false
+  packages:
+  - zlib

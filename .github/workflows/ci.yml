@@ -23,6 +23,13 @@ jobs:
         - "9.6.7"
         - "9.8.4"
         - "9.10.1"
+        exclude:
+        # These don't work on GitHub CI anymore because they need llvm@13, which became
+        # disabled on 12/31/2024
+        - os: macOS-latest
+          ghc: 8.10.7
+        - os: macOS-latest
+          ghc: 9.0.2
 
     steps:
     - uses: actions/checkout@v3
@@ -54,7 +61,7 @@ jobs:
         cabal test all
 
   stack:
-    name: stack / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    name: ${{ matrix.os }} / ${{ matrix.stack-yaml }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -63,14 +70,14 @@ jobs:
         - ubuntu-latest
         - macOS-latest
         # - windows-latest
-        ghc:
-        - "8.10.7"
-        - "9.0.2"
-        - "9.2.8"
-        - "9.4.8"
-        - "9.6.7"
-        - "9.8.4"
-        - "9.10.1"
+        stack-yaml:
+        - stack/stack-8.10.7.yaml
+        - stack/stack-9.0.2.yaml
+        - stack/stack-9.2.8.yaml
+        - stack/stack-9.4.8.yaml
+        - stack/stack-9.6.7.yaml
+        - stack/stack-9.8.4.yaml
+        - stack/stack-9.10.1.yaml
 
     steps:
     - uses: actions/checkout@v3
@@ -78,7 +85,6 @@ jobs:
     - uses: haskell-actions/setup@v2
       name: Setup Haskell Stack
       with:
-        ghc-version: ${{ matrix.ghc }}
         stack-version: "latest"
         enable-stack: true
 
@@ -86,16 +92,16 @@ jobs:
       name: Cache ~/.stack
       with:
         path: ~/.stack
-        key: ${{ runner.os }}-${{ matrix.ghc }}-stack
+        key: ${{ runner.os }}-${{ matrix.stack-yaml }}-stack
 
     - name: Build
       run: |
         stack build \
-          --system-ghc \
+          --stack-yaml ${{ matrix.stack-yaml }} \
           --flag myers-diff:diff \
           --flag myers-diff:uni_myers \
           --test --bench --no-run-tests --no-run-benchmarks
 
     - name: Test
       run: |
-        stack test --system-ghc
+        stack test --stack-yaml ${{ matrix.stack-yaml }}
