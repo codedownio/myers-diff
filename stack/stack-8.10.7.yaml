@@ -8,3 +8,6 @@ nix:
   pure: false
   packages:
   - zlib
+
+extra-deps:
+- text-rope-0.3@sha256:49564982ede8efd89f3ccbabe06e2c1d062684f6a45503001e4a038fa3fcd5c4,2390

@@ -75,9 +75,16 @@ jobs:
         - stack/stack-9.0.2.yaml
         - stack/stack-9.2.8.yaml
         - stack/stack-9.4.8.yaml
-        - stack/stack-9.6.7.yaml
+        - stack/stack-9.6.6.yaml
         - stack/stack-9.8.4.yaml
         - stack/stack-9.10.1.yaml
+        exclude:
+        # These don't work on GitHub CI anymore because they need llvm@13, which became
+        # disabled on 12/31/2024
+        - os: macOS-latest
+          stack-yaml: stack-8.10.7.yaml
+        - os: macOS-latest
+          stack-yaml: stack-9.0.2.yaml
 
     steps:
     - uses: actions/checkout@v3
