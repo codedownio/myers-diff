@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.3.0.1
+
+* Fix compatibility with `text-2.1.2` (#13)
+
 ## 0.3.0.0
 
 * Fix quadratic `Text` -> `Vector` conversion.
