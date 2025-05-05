@@ -82,9 +82,9 @@ jobs:
         # These don't work on GitHub CI anymore because they need llvm@13, which became
         # disabled on 12/31/2024
         - os: macOS-latest
-          stack-yaml: stack-8.10.7.yaml
+          stack-yaml: stack/stack-8.10.7.yaml
         - os: macOS-latest
-          stack-yaml: stack-9.0.2.yaml
+          stack-yaml: stack/stack-9.0.2.yaml
 
     steps:
     - uses: actions/checkout@v3
