@@ -8,7 +8,8 @@ import Control.Monad.Catch (MonadThrow)
 import Control.Monad.IO.Class
 import Data.Diff.Myers
 import Data.Diff.Types
-import Data.Text as T
+import Data.Text (Text)
+import qualified Data.Text as T
 import Test.Sandwich
 import Test.Sandwich.QuickCheck
 import TestLib.Apply
