@@ -22,7 +22,7 @@ jobs:
         - "9.4.8"
         - "9.6.7"
         - "9.8.4"
-        - "9.10.1"
+        - "9.10.2"
         exclude:
         # These don't work on GitHub CI anymore because they need llvm@13, which became
         # disabled on 12/31/2024
@@ -77,7 +77,7 @@ jobs:
         - stack/stack-9.4.8.yaml
         - stack/stack-9.6.6.yaml
         - stack/stack-9.8.4.yaml
-        - stack/stack-9.10.1.yaml
+        - stack/stack-9.10.2.yaml
         exclude:
         # These don't work on GitHub CI anymore because they need llvm@13, which became
         # disabled on 12/31/2024
