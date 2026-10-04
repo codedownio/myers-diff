@@ -41,8 +41,12 @@ jobs:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: "latest"
 
+    # Configure before freezing, so the freeze file is solved with the test and
+    # benchmark stanzas enabled. Freezing first pins versions that only satisfy
+    # the library, and the build then fails to resolve.
     - name: Freeze
       run: |
+        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
         cabal freeze
 
     - uses: actions/cache@v3
@@ -53,7 +57,6 @@ jobs:
 
     - name: Build
       run: |
-        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
         cabal build all
 
     - name: Test
