@@ -1,12 +1,16 @@
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/ffcb1ea6c63555a76323586de02a2887f7d7f36b";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs = { self, nixpkgs, flake-utils }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        default = pkgs.haskell.packages.ghc943.callPackage ./default.nix {};
+
+        # GHC version used by the resolver in stack.yaml (nightly-2025-05-13).
+        haskellPackages = pkgs.haskell.packages.ghc9102;
+
+        default = haskellPackages.callPackage ./default.nix {};
       in
         rec {
           packages = rec {
@@ -15,6 +19,23 @@
           };
 
           defaultPackage = packages.default;
+
+          devShells.default = pkgs.mkShell {
+            name = "myers-diff";
+
+            nativeBuildInputs = [
+              haskellPackages.ghc
+              pkgs.cabal-install
+              pkgs.stack
+              pkgs.hpack
+              pkgs.hlint
+              pkgs.pkg-config
+            ];
+
+            buildInputs = [
+              pkgs.zlib
+            ];
+          };
 
           nixpkgsPath = pkgs.path;
         }
